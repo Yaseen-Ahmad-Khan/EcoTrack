@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Eco Tracker - Real-time global environmental monitoring interactive model.">
+    <title>Eco Tracker</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Three.js and GLTFLoader using import maps -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="loading">Connecting to Satellite Data...</div>
+
+    <button id="theme-toggle" aria-label="Toggle Theme">
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </button>
+
+    <div class="screens-container">
+        <!-- Home Screen -->
+        <section id="screen-home" class="screen active">
+            <div class="overlay">
+                <header>
+                    <h1 class="logo">Eco<br/><span class="accent">Tracker</span></h1>
+                    <div class="status-indicator">
+                        <span class="dot"></span> Online and Tracking
+                    </div>
+                </header>
+            </div>
+            <div class="scroll-down-hint">
+                <div class="mouse"></div>
+                <span>Scroll or Swipe Down</span>
+            </div>
+        </section>
+
+        <!-- Login Screen -->
+        <section id="screen-login" class="screen">
+            <video autoplay loop muted playsinline class="bg-video" id="login-video">
+                <source id="login-video-src" src="../Assets/nature.mp4" type="video/mp4">
+            </video>
+
+            <div class="login-container">
+                <div class="login-sidebar">
+                    <button class="role-btn active" data-role="customer" data-video="../Assets/nature.mp4" data-title="Customer Login">
+                        Customer
+                    </button>
+                    <button class="role-btn" data-role="vendor" data-video="../Assets/vendor.mp4" data-title="Vendor Login">
+                        Vendor
+                    </button>
+                    <button class="role-btn" data-role="ngo" data-video="../Assets/ngo.mp4" data-title="NGO Login">
+                        NGO
+                    </button>
+                </div>
+
+                <div class="login-card">
+                    <h2 id="login-title">Customer Login</h2>
+                    <p id="login-subtitle">Welcome back, enter your credentials entirely</p>
+                    
+                    <form id="login-form">
+                        <div class="input-group">
+                            <input type="text" id="username" placeholder="Node ID / Email" required>
+                        </div>
+                        <div class="input-group">
+                            <input type="password" id="password" placeholder="Passcode" required>
+                        </div>
+                        <button type="submit" class="btn-eco">Authenticate</button>
+                        <p class="toggle-form">Don't have an account? <span id="show-signup">Sign Up</span></p>
+                        <button type="button" class="btn-back">Go Back</button>
+                    </form>
+
+                    <form id="signup-form" style="display: none;">
+                        <div class="input-group">
+                            <input type="text" id="reg-fullname" placeholder="Full Name" required>
+                        </div>
+                        <div class="input-group">
+                            <input type="email" id="reg-email" placeholder="Email Address" required>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="reg-phone" placeholder="Phone Number (e.g. 0300-1234567)">
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="reg-address" placeholder="Physical Address">
+                        </div>
+                        <div class="input-group">
+                            <input type="password" id="reg-password" placeholder="Passcode" required>
+                        </div>
+                        <button type="submit" class="btn-eco">Register</button>
+                        <p class="toggle-form">Already have an account? <span id="show-login">Log In</span></p>
+                        <button type="button" class="btn-back">Go Back</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>

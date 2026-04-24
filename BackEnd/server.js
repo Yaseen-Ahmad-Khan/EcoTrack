@@ -1,12 +1,24 @@
 const express=require('express');
 const app=express();
 app.use(express.json());
+
+// Enable CORS
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
 const sql=require('mssql/msnodesqlv8');
-app.listen(3000,()=>{
-    console.log("Server Running");
+app.listen(5000,()=>{
+    console.log("Server Running on port 5000");
 });
 const config = {
-    server: 'PC', 
+    server: 'DESKTOP-LTPKS4P\\SQLEXPRESS', 
     database: 'ecotrack',
     driver: 'ODBC Driver 18 for SQL Server',
     options: {
@@ -26,17 +38,17 @@ app.get('/displayallusers',async (req,res)=>
 //register user(postman)
 app.post('/registeruser', async (req, res) => {
     try {
-        const { full_name, email, password_hash, role } = req.body;
+        const { full_name, email, password_hash, role, phone_number, address } = req.body;
         await sql.connect(config);
         
         await sql.query`
-            INSERT INTO users (full_name, email, password_hash, role) 
-            VALUES (${full_name}, ${email}, ${password_hash}, ${role})
+            INSERT INTO users (full_name, email, password_hash, role, phone_number, address) 
+            VALUES (${full_name}, ${email}, ${password_hash}, ${role}, ${phone_number || null}, ${address || null})
         `;
         
-        res.status(201).send("User registered successfully!");
+        res.status(201).json({ message: "User registered successfully!" });
     } catch (err) {
-        res.status(400).send("Registration Failed: " + err.message);
+        res.status(400).json({ error: "Registration Failed: " + err.message });
     }
 });
 
@@ -63,7 +75,7 @@ app.get('/profile/:id', async (req, res) => {
 app.post('/login', async (req, res) => {
     try {
         await sql.connect(config);
-        const { email } = req.body;
+        const { email, password, role } = req.body;
         
         const result = await sql.query`
             SELECT user_id, password_hash, role 
@@ -71,9 +83,23 @@ app.post('/login', async (req, res) => {
             WHERE email = ${email}
         `;
         
-        res.json(result.recordset);
+        if (result.recordset.length === 0) {
+            return res.status(401).json({ error: "Invalid email or password" });
+        }
+        
+        const user = result.recordset[0];
+        
+        if (user.password_hash !== password) {
+            return res.status(401).json({ error: "Invalid email or password" });
+        }
+
+        if (user.role !== role) {
+            return res.status(403).json({ error: "Account type mismatch. Please select the correct login tab." });
+        }
+        
+        res.json({ message: "Login successful", role: user.role, user_id: user.user_id });
     } catch (err) { 
-        res.status(500).send(err.message); 
+        res.status(500).json({ error: err.message }); 
     }
 });
 
