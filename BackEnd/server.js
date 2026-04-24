@@ -22,19 +22,18 @@ app.get('/displayallusers',async (req,res)=>
     const result=await sql.query('select * from users');
     res.json(result.recordset);
 });
+
 //register user(postman)
 app.post('/registeruser', async (req, res) => {
     try {
         const { full_name, email, password_hash, role } = req.body;
         await sql.connect(config);
-        const request = new sql.Request();
-        request.input('name', sql.VarChar, full_name);
-        request.input('email', sql.VarChar, email);
-        request.input('pass', sql.VarChar, password_hash);
-        request.input('role', sql.VarChar, role);
-
-        const query = 'insert into users (full_name, email, password_hash, role) values (@name, @email, @pass, @role)';
-        await request.query(query);
+        
+        await sql.query`
+            INSERT INTO users (full_name, email, password_hash, role) 
+            VALUES (${full_name}, ${email}, ${password_hash}, ${role})
+        `;
+        
         res.status(201).send("User registered successfully!");
     } catch (err) {
         res.status(400).send("Registration Failed: " + err.message);
@@ -45,40 +44,50 @@ app.post('/registeruser', async (req, res) => {
 app.get('/profile/:id', async (req, res) => {
     try {
         await sql.connect(config);
-        const request = new sql.Request();
-        request.input('uid', sql.Int, req.params.id);
-        const result = await request.query(`
-            select users.full_name, users.email, loyalty_points.points_earned 
-            from users 
-            left join loyalty_points on users.user_id = loyalty_points.user_id 
-            where users.user_id = @uid
-        `);
+        const { id } = req.params;
+        
+        const result = await sql.query`
+            SELECT users.full_name, users.email, loyalty_points.points_earned 
+            FROM users 
+            LEFT JOIN loyalty_points ON users.user_id = loyalty_points.user_id 
+            WHERE users.user_id = ${id}
+        `;
+        
         res.json(result.recordset);
-    } catch (err) { res.status(500).send(err.message); }
+    } catch (err) { 
+        res.status(500).send(err.message); 
+    }
 });
 
 //login check
 app.post('/login', async (req, res) => {
     try {
         await sql.connect(config);
-        const request = new sql.Request();
-        request.input('email', sql.VarChar, req.body.email);
-        const result = await request.query('select user_id, password_hash, role from users where email = @email');
+        const { email } = req.body;
+        
+        const result = await sql.query`
+            SELECT user_id, password_hash, role 
+            FROM users 
+            WHERE email = ${email}
+        `;
+        
         res.json(result.recordset);
-    } catch (err) { res.status(500).send(err.message); }
+    } catch (err) { 
+        res.status(500).send(err.message); 
+    }
 });
 
 //  Total Items for a Vendor (http://localhost:3000/inventory/total/1)
 app.get('/inventory/total/:vid', async (req, res) => {
     try {
         await sql.connect(config);
-        const request = new sql.Request();
+        const { vid } = req.params;
         
-        
-        request.input('vid', sql.Int, req.params.vid);
-        
-        const result = await request.query('select count(item_id) as total_items from inventory where vendor_id = @vid');
-        
+        const result = await sql.query`
+            SELECT COUNT(item_id) AS total_items 
+            FROM inventory 
+            WHERE vendor_id = ${vid}
+        `;
         
         res.json(result.recordset[0]); 
     } catch (err) {
@@ -90,22 +99,20 @@ app.get('/inventory/total/:vid', async (req, res) => {
 app.get('/analytics/total-saved', async (req, res) => {
     try {
         await sql.connect(config);
-        const result = await sql.query('select sum(quantity_ordered) as total_items_saved from orders');
-        
+        const result = await sql.query('SELECT SUM(quantity_ordered) AS total_items_saved FROM orders');
         
         res.json(result.recordset[0]); 
     } catch (err) {
         res.status(500).send("Error calculating total saved: " + err.message);
     }
 });
+
 //  Total CO2 Saved (Environmental Impact)(http://localhost:3000/analytics/co2-saved)
 app.get('/analytics/co2-saved', async (req, res) => {
     try {
         await sql.connect(config);
         
-        
-        const result = await sql.query('select sum(quantity_ordered * 2.5) as total_co2_saved_kg from orders');
-        
+        const result = await sql.query('SELECT SUM(quantity_ordered * 2.5) AS total_co2_saved_kg FROM orders');
         
         res.json(result.recordset[0]); 
     } catch (err) {
@@ -117,20 +124,15 @@ app.get('/analytics/co2-saved', async (req, res) => {
 app.get('/analytics/revenue/:vid', async (req, res) => {
     try {
         await sql.connect(config);
-        const request = new sql.Request();
+        const { vid } = req.params;
         
-        
-        request.input('vid', sql.Int, req.params.vid);
-        
-        const result = await request.query(`
-            select 
-                sum(orders.total_amount) as revenue_recovered 
-            from orders 
-            join inventory on orders.item_id = inventory.item_id 
-            where inventory.vendor_id = @vid 
-            and orders.order_type = 'purchase'
-        `);
-        
+        const result = await sql.query`
+            SELECT SUM(orders.total_amount) AS revenue_recovered 
+            FROM orders 
+            JOIN inventory ON orders.item_id = inventory.item_id 
+            WHERE inventory.vendor_id = ${vid} 
+            AND orders.order_type = 'purchase'
+        `;
         
         res.json(result.recordset[0]); 
     } catch (err) {
@@ -143,9 +145,7 @@ app.get('/analytics/completed-donations', async (req, res) => {
     try {
         await sql.connect(config);
         
-        
-        const result = await sql.query("select count(*) as completed_donations from claims where claim_status = 'collected'");
-        
+        const result = await sql.query("SELECT COUNT(*) AS completed_donations FROM claims WHERE claim_status = 'collected'");
         
         res.json(result.recordset[0]); 
     } catch (err) {
@@ -158,16 +158,14 @@ app.get('/analytics/monthly-trend', async (req, res) => {
     try {
         await sql.connect(config);
         
-        
         const result = await sql.query(`
-            select 
-                month(order_date) as month_num, 
-                count(*) as total_orders 
-            from orders 
-            group by month(order_date)
-            order by month_num asc
+            SELECT 
+                MONTH(order_date) AS month_num, 
+                COUNT(*) AS total_orders 
+            FROM orders 
+            GROUP BY MONTH(order_date)
+            ORDER BY month_num ASC
         `);
-        
         
         res.json(result.recordset); 
     } catch (err) {
@@ -175,18 +173,17 @@ app.get('/analytics/monthly-trend', async (req, res) => {
     }
 });
 
-
 app.get('/displaydiscounted',async (req,res)=>
 {
     await sql.connect(config);
-    const result=await sql.query("select * from inventory where status = 'discounted' and quantity > 0");
+    const result=await sql.query("SELECT * FROM inventory WHERE status = 'discounted' AND quantity > 0");
     res.json(result.recordset);
 });
 
 app.get('/filterbycategory', async (req, res) => {
-
     await sql.connect(config);
     const { category_name } = req.body;
+    
     const result = await sql.query`
         SELECT inventory.*
         FROM inventory
@@ -199,9 +196,7 @@ app.get('/filterbycategory', async (req, res) => {
 });
 
 app.get('/filterbyprice', async (req, res) => {
-
     await sql.connect(config);
-
     const { min_price, max_price } = req.body;
 
     const result = await sql.query`
@@ -210,11 +205,11 @@ app.get('/filterbyprice', async (req, res) => {
         AND current_price <= ${max_price}
         AND status = 'discounted'
     `;
+    
     res.json(result.recordset);
 });
 
 app.get('/topvendors', async (req, res) => {
-
     await sql.connect(config);
 
     const result = await sql.query(`
@@ -231,9 +226,7 @@ app.get('/topvendors', async (req, res) => {
 });
 
 app.get('/orderhistory', async (req, res) => {
-
     await sql.connect(config);
-
     const { buyer_id } = req.body;
 
     const result = await sql.query`
@@ -246,9 +239,7 @@ app.get('/orderhistory', async (req, res) => {
 });
 
 app.post('/placeorder', async (req, res) => {
-
     await sql.connect(config);
-
     const { buyer_id, item_id, order_type, quantity_ordered, total_amount } = req.body;
 
     await sql.query`
@@ -262,9 +253,7 @@ app.post('/placeorder', async (req, res) => {
 });
 
 app.post('/updatephone', async (req, res) => {
-
     await sql.connect(config);
-
     const { user_id, phone_number } = req.body;
 
     await sql.query`
@@ -277,9 +266,7 @@ app.post('/updatephone', async (req, res) => {
 });
 
 app.post('/updateemail', async (req, res) => {
-
     await sql.connect(config);
-
     const { user_id, email } = req.body;
 
     await sql.query`
@@ -292,9 +279,7 @@ app.post('/updateemail', async (req, res) => {
 });
 
 app.post('/updatepassword', async (req, res) => {
-
     await sql.connect(config);
-
     const { user_id, password_hash } = req.body;
 
     await sql.query`
@@ -307,9 +292,7 @@ app.post('/updatepassword', async (req, res) => {
 });
 
 app.delete('/deleteuser', async (req, res) => {
-
     await sql.connect(config);
-
     const { user_id } = req.body;
 
     await sql.query`
@@ -321,9 +304,7 @@ app.delete('/deleteuser', async (req, res) => {
 });
 
 app.get('/filterbyrole', async (req, res) => {
-
     await sql.connect(config);
-
     const { role } = req.body;
 
     const result = await sql.query`
@@ -335,7 +316,6 @@ app.get('/filterbyrole', async (req, res) => {
 });
 
 app.get('/outofstock', async (req, res) => {
-
     await sql.connect(config);
 
     const result = await sql.query(`
@@ -347,9 +327,7 @@ app.get('/outofstock', async (req, res) => {
 });
 
 app.post('/addstock', async (req, res) => {
-
     await sql.connect(config);
-
     const { product_id, vendor_id, quantity, original_price, current_price, expiry_date } = req.body;
 
     await sql.query`
@@ -363,11 +341,8 @@ app.post('/addstock', async (req, res) => {
 });
 
 app.get('/lowstock', async (req, res) => {
-
     await sql.connect(config);
-
-    const { vendor_id, threshold } = req.body; // threshold optional, default 10
-
+    const { vendor_id, threshold } = req.body;
     const min_qty = threshold || 10;
 
     const result = await sql.query`
@@ -380,9 +355,7 @@ app.get('/lowstock', async (req, res) => {
 });
 
 app.get('/expiryreport', async (req, res) => {
-
     await sql.connect(config);
-
     const { vendor_id } = req.body;
 
     const result = await sql.query`
@@ -396,9 +369,7 @@ app.get('/expiryreport', async (req, res) => {
 });
 
 app.post('/updateprice', async (req, res) => {
-
     await sql.connect(config);
-
     const { item_id, new_price } = req.body;
 
     await sql.query`
@@ -411,9 +382,7 @@ app.post('/updateprice', async (req, res) => {
 });
 
 app.get('/stocksummary', async (req, res) => {
-
     await sql.connect(config);
-
     const { vendor_id } = req.body;
 
     const result = await sql.query`
@@ -425,7 +394,6 @@ app.get('/stocksummary', async (req, res) => {
 
     res.json(result.recordset);
 });
-
 
 // Function to run the maintenance logic
 const runAutoLogic = async () => {
@@ -494,11 +462,12 @@ app.post('/claims/create', async (req, res) => {
     try {
         const { item_id, ngo_id } = req.body; 
         await sql.connect(config);
-        const request = new sql.Request();
-        request.input('item_id', sql.Int, item_id);
-        request.input('ngo_id', sql.Int, ngo_id);
         
-        await request.query("INSERT INTO claims (item_id, ngo_id, claim_status) VALUES (@item_id, @ngo_id, 'pending')");
+        await sql.query`
+            INSERT INTO claims (item_id, ngo_id, claim_status) 
+            VALUES (${item_id}, ${ngo_id}, 'pending')
+        `;
+        
         res.status(201).send({ message: "Claim submitted successfully" });
     } catch (err) {
         res.status(500).send(err.message);
@@ -508,10 +477,13 @@ app.post('/claims/create', async (req, res) => {
 app.get('/claims/history/:ngo_id', async (req, res) => {
     try {
         await sql.connect(config);
-        const request = new sql.Request();
-        request.input('ngo_id', sql.Int, req.params.ngo_id);
+        const { ngo_id } = req.params;
         
-        const result = await request.query("SELECT * FROM claims WHERE ngo_id = @ngo_id");
+        const result = await sql.query`
+            SELECT * FROM claims 
+            WHERE ngo_id = ${ngo_id}
+        `;
+        
         res.json(result.recordset);
     } catch (err) {
         res.status(500).send(err.message);
@@ -521,14 +493,14 @@ app.get('/claims/history/:ngo_id', async (req, res) => {
 app.get('/claims/pending/:vendor_id', async (req, res) => {
     try {
         await sql.connect(config);
-        const request = new sql.Request();
-        request.input('vendor_id', sql.Int, req.params.vendor_id);
+        const { vendor_id } = req.params;
         
-        const result = await request.query(`
+        const result = await sql.query`
             SELECT c.* FROM claims c
             JOIN inventory i ON c.item_id = i.item_id 
-            WHERE i.vendor_id = @vendor_id AND c.claim_status = 'pending'
-        `);
+            WHERE i.vendor_id = ${vendor_id} AND c.claim_status = 'pending'
+        `;
+        
         res.json(result.recordset);
     } catch (err) {
         res.status(500).send(err.message);
@@ -548,10 +520,13 @@ app.get('/logistics/active', async (req, res) => {
 app.get('/notifications/unread/:user_id', async (req, res) => {
     try {
         await sql.connect(config);
-        const request = new sql.Request();
-        request.input('user_id', sql.Int, req.params.user_id);
+        const { user_id } = req.params;
         
-        const result = await request.query("SELECT * FROM notifications WHERE user_id = @user_id AND is_read = 0");
+        const result = await sql.query`
+            SELECT * FROM notifications 
+            WHERE user_id = ${user_id} AND is_read = 0
+        `;
+        
         res.json(result.recordset);
     } catch (err) {
         res.status(500).send(err.message);
