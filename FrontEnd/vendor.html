@@ -2,9 +2,907 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Vendor Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoTrack | Vendor Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --forest-green: #062016; /* Slightly lighter forest green */
+            --emerald-green: #0a3d2e;
+            --soft-amber: #fbbf24;
+            --crisp-white: #f8fafc;
+            --glass-bg: rgba(6, 32, 22, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --neon-glow: rgba(16, 185, 129, 0.3);
+        }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--forest-green);
+            background-image: 
+                linear-gradient(to bottom, rgba(6, 32, 22, 0.7), rgba(6, 32, 22, 0.9)),
+                url('nature_tech_background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--crisp-white);
+            min-height: 100vh;
+        }
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+        /* ... existing styles ... */
+        .sidebar-item { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-item.active {
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.15) 0%, transparent 100%);
+            border-left: 4px solid var(--soft-amber);
+            color: var(--soft-amber);
+        }
+        .sidebar-item:hover:not(.active) { transform: translateX(5px); color: #10b981; }
+        input, select {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            border-radius: 12px !important;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #064e3b 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        }
+        .btn-primary:hover { transform: scale(1.02); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+        .float-icon { animation: float 8s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.2)); }
+        @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-30px) rotate(10deg); } }
+        .stat-card:hover { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.4); transform: translateY(-5px); }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+    </style>
 </head>
-<body>
-    <h1>vendor tabs here</h1>
+<body class="flex overflow-hidden relative">
+
+    <!-- Decorative Floating Icons & Particles -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <!-- Floating Nature & Food Icons -->
+        <i data-lucide="leaf" class="float-icon absolute top-[10%] left-[5%] text-emerald-500/20 w-12 h-12" style="animation-delay: 0s;"></i>
+        <i data-lucide="sprout" class="float-icon absolute top-[70%] left-[80%] text-emerald-500/10 w-20 h-20" style="animation-delay: 2s;"></i>
+        <i data-lucide="flower-2" class="float-icon absolute top-[40%] left-[90%] text-emerald-500/15 w-16 h-16" style="animation-delay: 4s;"></i>
+        <i data-lucide="wind" class="float-icon absolute top-[20%] left-[70%] text-emerald-500/10 w-24 h-24" style="animation-delay: 1s;"></i>
+        <i data-lucide="apple" class="float-icon absolute top-[15%] left-[25%] text-red-500/10 w-14 h-14" style="animation-delay: 3s;"></i>
+        <i data-lucide="cookie" class="float-icon absolute top-[80%] left-[15%] text-amber-600/10 w-12 h-12" style="animation-delay: 5s;"></i>
+        <i data-lucide="pizza" class="float-icon absolute top-[50%] left-[35%] text-amber-400/10 w-20 h-20" style="animation-delay: 2.5s;"></i>
+        <i data-lucide="beef" class="float-icon absolute top-[30%] left-[60%] text-red-400/10 w-16 h-16" style="animation-delay: 6s;"></i>
+        <i data-lucide="carrot" class="float-icon absolute top-[90%] left-[50%] text-orange-400/10 w-14 h-14" style="animation-delay: 1.5s;"></i>
+        <i data-lucide="sandwich" class="float-icon absolute top-[10%] left-[85%] text-emerald-400/10 w-12 h-12" style="animation-delay: 7s;"></i>
+        <i data-lucide="cake" class="float-icon absolute top-[60%] left-[25%] text-pink-400/10 w-18 h-18" style="animation-delay: 4.5s;"></i>
+        <i data-lucide="fish" class="float-icon absolute top-[45%] left-[10%] text-blue-400/10 w-14 h-14" style="animation-delay: 8s;"></i>
+        <i data-lucide="citrus" class="float-icon absolute top-[75%] left-[45%] text-yellow-400/10 w-12 h-12" style="animation-delay: 2.2s;"></i>
+        <i data-lucide="egg" class="float-icon absolute top-[25%] left-[95%] text-white/10 w-10 h-10" style="animation-delay: 3.5s;"></i>
+        <i data-lucide="grape" class="float-icon absolute top-[5%] left-[55%] text-purple-400/10 w-16 h-16" style="animation-delay: 9s;"></i>
+        <i data-lucide="croissant" class="float-icon absolute top-[85%] left-[70%] text-amber-300/10 w-16 h-16" style="animation-delay: 5.5s;"></i>
+        <i data-lucide="banana" class="float-icon absolute top-[35%] left-[15%] text-yellow-300/10 w-14 h-14" style="animation-delay: 10s;"></i>
+        <i data-lucide="soup" class="float-icon absolute top-[65%] left-[90%] text-orange-300/10 w-14 h-14" style="animation-delay: 4.8s;"></i>
+
+        <!-- More Nature -->
+        <i data-lucide="tree-pine" class="float-icon absolute top-[60%] left-[5%] text-emerald-600/10 w-32 h-32" style="animation-delay: 1.5s; animation-duration: 12s;"></i>
+        <i data-lucide="shrub" class="float-icon absolute top-[80%] left-[85%] text-emerald-700/10 w-24 h-24" style="animation-delay: 6.5s; animation-duration: 15s;"></i>
+        <i data-lucide="flower" class="float-icon absolute top-[10%] left-[45%] text-emerald-400/15 w-10 h-10" style="animation-delay: 2.8s;"></i>
+        
+        <!-- Glowing Particles -->
+        <div class="absolute top-[30%] left-[20%] w-2 h-2 bg-emerald-400 rounded-full blur-[2px] animate-pulse" style="animation-duration: 3s;"></div>
+        <div class="absolute top-[50%] left-[60%] w-3 h-3 bg-emerald-500 rounded-full blur-[3px] animate-pulse" style="animation-duration: 4s;"></div>
+        <div class="absolute top-[80%] left-[30%] w-2 h-2 bg-soft-amber rounded-full blur-[2px] animate-pulse" style="animation-duration: 5s;"></div>
+        <div class="absolute top-[10%] left-[80%] w-1.5 h-1.5 bg-emerald-300 rounded-full blur-[1px] animate-pulse" style="animation-duration: 2.5s;"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="w-64 glass h-screen flex flex-col border-r border-white/10 z-50">
+        <div class="p-8">
+            <h1 class="text-2xl font-bold tracking-tighter flex items-center gap-2">
+                <i data-lucide="leaf" class="text-emerald-400"></i>
+                Eco<span class="text-emerald-400">Track</span>
+            </h1>
+            <p class="text-[10px] uppercase tracking-widest text-emerald-400/60 mt-1 font-semibold">Vendor Command Center</p>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <button onclick="showSection('overview')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all active" id="nav-overview">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span class="font-medium">Overview</span>
+            </button>
+            <button onclick="showSection('inventory')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all" id="nav-inventory">
+                <i data-lucide="box" class="w-5 h-5"></i>
+                <span class="font-medium">Inventory</span>
+            </button>
+            <button onclick="showSection('pricing')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all" id="nav-pricing">
+                <i data-lucide="tag" class="w-5 h-5"></i>
+                <span class="font-medium">Pricing</span>
+            </button>
+            <button onclick="showSection('claims')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all" id="nav-claims">
+                <i data-lucide="truck" class="w-5 h-5"></i>
+                <span class="font-medium">NGO Claims</span>
+            </button>
+            <button onclick="showSection('settings')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all" id="nav-settings">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+                <span class="font-medium">Settings</span>
+            </button>
+        </nav>
+
+        <div class="p-4 mt-auto">
+            <div class="glass rounded-2xl p-4 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                    <i data-lucide="user" class="text-emerald-400 w-5 h-5"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-semibold truncate" id="user-name">Loading...</p>
+                    <p class="text-[10px] text-white/50 uppercase tracking-tighter">Vendor</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-red-400 hover:bg-red-400/10 transition-all text-sm font-medium">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-8 hide-scroll relative">
+        <!-- Top Nav Bar -->
+        <div class="flex justify-between items-center mb-10">
+            <div>
+                <h2 class="text-3xl font-bold" id="section-title">Command Overview</h2>
+                <p class="text-white/60 mt-1" id="section-subtitle">Real-time surveillance of your surplus operations.</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <button onclick="toggleNotifications()" class="glass p-3 rounded-2xl hover:border-emerald-500/50 transition-all relative">
+                        <i data-lucide="bell" class="w-6 h-6"></i>
+                        <span id="notif-dot" class="absolute top-2 right-2 w-3 h-3 bg-soft-amber border-2 border-forest-green rounded-full hidden"></span>
+                    </button>
+                    <!-- Notifications Dropdown -->
+                    <div id="notif-dropdown" class="absolute right-0 mt-4 w-80 glass rounded-2xl shadow-2xl p-4 border border-white/10 hidden z-50">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold">Notifications</h3>
+                            <span class="text-[10px] text-emerald-400 uppercase font-bold tracking-widest" id="unread-count">0 Unread</span>
+                        </div>
+                        <div id="notif-list" class="space-y-3 max-h-64 overflow-y-auto hide-scroll text-sm">
+                            <p class="text-center py-4 text-white/40 italic">No new signals detected.</p>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="refreshData()" class="btn-primary px-6 py-3 rounded-2xl font-semibold flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                    Sync Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Sections Container -->
+        <div id="content-area">
+            
+            <!-- OVERVIEW SECTION -->
+            <div id="section-overview" class="section-container space-y-8 animate-in fade-in duration-700">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="glass p-6 rounded-3xl group hover:border-emerald-500/50 transition-all">
+                        <div class="flex justify-between items-start">
+                            <div class="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400">
+                                <i data-lucide="package" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs text-white/30 font-bold uppercase tracking-widest">Active Stock</span>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="text-4xl font-bold" id="stat-total-items">0</h3>
+                            <p class="text-xs text-white/50 mt-1 flex items-center gap-1 italic">
+                                <i data-lucide="trending-up" class="w-3 h-3 text-emerald-400"></i>
+                                Real-time inventory count
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="glass p-6 rounded-3xl group hover:border-amber-500/50 transition-all">
+                        <div class="flex justify-between items-start">
+                            <div class="p-3 rounded-2xl bg-amber-500/10 text-amber-500">
+                                <i data-lucide="dollar-sign" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs text-white/30 font-bold uppercase tracking-widest">Revenue Saved</span>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="text-4xl font-bold" id="stat-revenue">$0.00</h3>
+                            <p class="text-xs text-white/50 mt-1 flex items-center gap-1 italic">
+                                <i data-lucide="check-circle" class="w-3 h-3 text-amber-500"></i>
+                                From discounted sales
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="glass p-6 rounded-3xl group hover:border-blue-500/50 transition-all">
+                        <div class="flex justify-between items-start">
+                            <div class="p-3 rounded-2xl bg-blue-500/10 text-blue-400">
+                                <i data-lucide="cloud" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs text-white/30 font-bold uppercase tracking-widest">CO2 Offset</span>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="text-4xl font-bold" id="stat-co2">0.0</h3>
+                            <p class="text-xs text-white/50 mt-1 italic">Metric tonnes saved</p>
+                        </div>
+                    </div>
+
+                    <div class="glass p-6 rounded-3xl group hover:border-emerald-500/50 transition-all">
+                        <div class="flex justify-between items-start">
+                            <div class="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400">
+                                <i data-lucide="trash-2" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs text-white/30 font-bold uppercase tracking-widest">Waste Prevented</span>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="text-4xl font-bold" id="stat-waste">0</h3>
+                            <p class="text-xs text-white/50 mt-1 italic">Total items rescued</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 glass p-8 rounded-3xl">
+                        <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                            <i data-lucide="bar-chart-3" class="text-emerald-400"></i>
+                            Operational Efficiency Trend
+                        </h3>
+                        <div class="h-64">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass p-8 rounded-3xl">
+                        <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                            <i data-lucide="pie-chart" class="text-amber-500"></i>
+                            Stock Breakdown
+                        </h3>
+                        <div class="h-64 flex items-center justify-center">
+                            <canvas id="summaryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INVENTORY SECTION -->
+            <div id="section-inventory" class="section-container hidden space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                <div class="flex justify-between items-center">
+                    <div class="flex gap-4">
+                        <button onclick="openModal('addStockModal')" class="btn-primary px-6 py-3 rounded-2xl font-semibold flex items-center gap-2">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                            Append Inventory
+                        </button>
+                        <div class="relative">
+                            <input type="number" id="low-stock-threshold" placeholder="Low Stock Threshold (default 10)" class="pl-12 pr-4 py-3 glass rounded-2xl w-64 text-sm">
+                            <i data-lucide="alert-triangle" class="absolute left-4 top-3.5 w-5 h-5 text-amber-500"></i>
+                        </div>
+                        <button onclick="getLowStock()" class="glass px-6 py-3 rounded-2xl hover:border-amber-500 transition-all font-medium text-amber-500 border border-amber-500/20">
+                            Scan Critical Levels
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="glass p-6 rounded-3xl">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-red-400">
+                            <i data-lucide="x-circle"></i> Depleted Units
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="text-white/40 border-b border-white/10 uppercase tracking-widest text-[10px] font-bold">
+                                        <th class="pb-3">Product ID</th>
+                                        <th class="pb-3">Last Seen</th>
+                                        <th class="pb-3 text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="out-of-stock-table" class="divide-y divide-white/5">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="glass p-6 rounded-3xl">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-emerald-400">
+                            <i data-lucide="calendar"></i> Expiry Surveillance
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="text-white/40 border-b border-white/10 uppercase tracking-widest text-[10px] font-bold">
+                                        <th class="pb-3">Item ID</th>
+                                        <th class="pb-3">Expiry Date</th>
+                                        <th class="pb-3 text-right">Phase</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expiry-report-table" class="divide-y divide-white/5">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRICING SECTION -->
+            <div id="section-pricing" class="section-container hidden space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold flex items-center gap-2">
+                        <i data-lucide="zap" class="text-amber-400"></i>
+                        Real-time Price Adjustment
+                    </h3>
+                    <button onclick="triggerRefresh()" class="btn-amber text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2">
+                        <i data-lucide="refresh-ccw" class="w-5 h-5"></i>
+                        Force Optimization Logic
+                    </button>
+                </div>
+
+                <div class="glass rounded-3xl overflow-hidden p-6">
+                    <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold uppercase tracking-widest text-white/40">Select Item to Reprice</label>
+                            <select id="reprice-item-id" class="w-full glass rounded-xl px-4 py-3 text-sm focus:outline-none"></select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold uppercase tracking-widest text-white/40">New Competitive Price ($)</label>
+                            <div class="flex gap-2">
+                                <input type="number" step="0.01" id="new-price-input" placeholder="e.g. 5.99" class="flex-1 glass rounded-xl px-4 py-3 text-sm">
+                                <button onclick="updatePrice()" class="btn-primary px-6 rounded-xl font-bold">Update</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="pricing-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Pricing cards -->
+                </div>
+            </div>
+
+            <!-- CLAIMS SECTION -->
+            <div id="section-claims" class="section-container hidden space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                <div class="glass p-8 rounded-3xl">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="clipboard-check" class="text-emerald-400"></i>
+                        Pending Pickup Claims (NGO)
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-white/40 border-b border-white/10 uppercase tracking-widest text-[10px] font-bold">
+                                    <th class="pb-4 px-4">Claim ID</th>
+                                    <th class="pb-4 px-4">NGO ID</th>
+                                    <th class="pb-4 px-4">Item ID</th>
+                                    <th class="pb-4 px-4">Status</th>
+                                    <th class="pb-4 px-4 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="claims-table-body" class="divide-y divide-white/5">
+                                <!-- Dynamic claims -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS SECTION -->
+            <div id="section-settings" class="section-container hidden space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="glass p-8 rounded-3xl space-y-6">
+                        <h3 class="text-xl font-bold flex items-center gap-2">
+                            <i data-lucide="user-cog" class="text-emerald-400"></i>
+                            Security & Identity
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Phone Number</label>
+                                    <input type="text" id="settings-phone" class="w-full glass rounded-xl px-4 py-3 text-sm">
+                                </div>
+                                <div class="space-y-1 pt-5">
+                                    <button onclick="updatePhone()" class="w-full glass py-3 rounded-xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-sm font-bold">Sync Phone</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Email Address</label>
+                                    <input type="email" id="settings-email" class="w-full glass rounded-xl px-4 py-3 text-sm">
+                                </div>
+                                <div class="space-y-1 pt-5">
+                                    <button onclick="updateEmail()" class="w-full glass py-3 rounded-xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-sm font-bold">Sync Email</button>
+                                </div>
+                            </div>
+                            <hr class="border-white/10 my-4">
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Reset Access Passcode</label>
+                                <input type="password" id="settings-password" placeholder="New Passcode" class="w-full glass rounded-xl px-4 py-3 text-sm">
+                                <button onclick="updatePassword()" class="w-full btn-primary py-3 rounded-xl font-bold">Update Passcode</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass p-8 rounded-3xl flex flex-col items-center justify-center space-y-6 border-red-500/20">
+                        <div class="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20">
+                            <i data-lucide="shield-alert" class="w-10 h-10"></i>
+                        </div>
+                        <div class="text-center">
+                            <h3 class="text-xl font-bold text-red-400">Erase Facility Data</h3>
+                            <p class="text-sm text-white/40 mt-2">Proceeding will permanently purge your facility from the global network. This action is irreversible.</p>
+                        </div>
+                        <button onclick="deleteAccount()" class="w-full py-4 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/30 font-bold hover:bg-red-500 hover:text-white transition-all">
+                            Terminate Facility License
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div id="addStockModal" class="fixed inset-0 bg-forest-green/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="glass w-full max-w-lg rounded-3xl p-8 border-white/20 animate-in zoom-in-95 duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Inventory Registration</h3>
+                <button onclick="closeModal('addStockModal')" class="text-white/40 hover:text-white"><i data-lucide="x"></i></button>
+            </div>
+            <form id="add-stock-form" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Product Catalog ID</label>
+                        <input type="number" id="modal-product-id" required class="w-full glass rounded-xl px-4 py-3 text-sm">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Unit Quantity</label>
+                        <input type="number" id="modal-quantity" required class="w-full glass rounded-xl px-4 py-3 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Original Price ($)</label>
+                        <input type="number" step="0.01" id="modal-orig-price" required class="w-full glass rounded-xl px-4 py-3 text-sm">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Current Price ($)</label>
+                        <input type="number" step="0.01" id="modal-curr-price" required class="w-full glass rounded-xl px-4 py-3 text-sm">
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Unit Expiry Date</label>
+                    <input type="date" id="modal-expiry" required class="w-full glass rounded-xl px-4 py-3 text-sm">
+                </div>
+                <button type="submit" class="w-full btn-primary py-4 rounded-xl font-bold mt-4">Broadcast to Marketplace</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification System -->
+    <div id="toast-container" class="fixed bottom-8 right-8 z-[200] space-y-4"></div>
+
+    <script>
+        // Init Lucide
+        lucide.createIcons();
+
+        // Data Management
+        const vendorId = localStorage.getItem('user_id') || 1; // Default to 1 for demo if no login
+        const baseUrl = 'http://localhost:5000';
+
+        // State Management
+        let currentSection = 'overview';
+        let charts = { trend: null, summary: null };
+
+        // Navigation
+        function showSection(section) {
+            document.querySelectorAll('.section-container').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`section-${section}`).classList.remove('hidden');
+            document.getElementById(`nav-${section}`).classList.add('active');
+            
+            currentSection = section;
+            updateSectionText(section);
+            refreshData();
+        }
+
+        function updateSectionText(section) {
+            const titles = {
+                'overview': { t: 'Command Overview', s: 'Real-time surveillance of your surplus operations.' },
+                'inventory': { t: 'Inventory Matrix', s: 'Detailed control over your stocked assets.' },
+                'pricing': { t: 'Dynamic Pricing', s: 'Optimize valuations based on expiration cycles.' },
+                'claims': { t: 'NGO Claim Logistics', s: 'Verify and authorize social impact donations.' },
+                'settings': { t: 'Facility Parameters', s: 'Configure your network credentials and status.' }
+            };
+            document.getElementById('section-title').innerText = titles[section].t;
+            document.getElementById('section-subtitle').innerText = titles[section].s;
+        }
+
+        // Modals
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+
+        // API Interactions
+        async function refreshData() {
+            try {
+                // Common profile info
+                const profRes = await fetch(`${baseUrl}/profile/${vendorId}`);
+                const profData = await profRes.json();
+                if (profData && profData.length > 0) {
+                    document.getElementById('user-name').innerText = profData[0].full_name;
+                    document.getElementById('settings-phone').value = profData[0].phone_number || '';
+                    document.getElementById('settings-email').value = profData[0].email;
+                }
+
+                if (currentSection === 'overview') loadOverview();
+                if (currentSection === 'inventory') loadInventory();
+                if (currentSection === 'pricing') loadPricing();
+                if (currentSection === 'claims') loadClaims();
+                
+                loadNotifications();
+            } catch (err) {
+                console.error("Refresh Error:", err);
+                showToast("System error: Unable to sync with backend server.", "error");
+            }
+        }
+
+        async function loadOverview() {
+            const [totalRes, revRes, co2Res, wasteRes, trendRes, summaryRes] = await Promise.all([
+                fetch(`${baseUrl}/inventory/total/${vendorId}`),
+                fetch(`${baseUrl}/analytics/revenue/${vendorId}`),
+                fetch(`${baseUrl}/analytics/co2-saved`),
+                fetch(`${baseUrl}/analytics/total-saved`),
+                fetch(`${baseUrl}/analytics/monthly-trend`),
+                fetch(`${baseUrl}/stocksummary`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vendor_id: vendorId })
+                })
+            ]);
+
+            const total = await totalRes.json();
+            const revenue = await revRes.json();
+            const co2 = await co2Res.json();
+            const waste = await wasteRes.json();
+            const trend = await trendRes.json();
+            const summary = await summaryRes.json();
+
+            document.getElementById('stat-total-items').innerText = total.total_items || 0;
+            document.getElementById('stat-revenue').innerText = `$${(revenue.revenue_recovered || 0).toFixed(2)}`;
+            document.getElementById('stat-co2').innerText = ((co2.total_co2_saved_kg || 0) / 1000).toFixed(1);
+            document.getElementById('stat-waste').innerText = waste.total_items_saved || 0;
+
+            renderTrendChart(trend);
+            renderSummaryChart(summary);
+        }
+
+        async function loadInventory() {
+            const [outRes, expRes] = await Promise.all([
+                fetch(`${baseUrl}/outofstock`),
+                fetch(`${baseUrl}/expiryreport`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vendor_id: vendorId })
+                })
+            ]);
+
+            const outOfStock = await outRes.json();
+            const expiryReport = await expRes.json();
+
+            const outTable = document.getElementById('out-of-stock-table');
+            outTable.innerHTML = outOfStock.filter(i => i.vendor_id == vendorId).map(i => `
+                <tr class="hover:bg-white/5 transition-all">
+                    <td class="py-4 px-2 font-mono text-emerald-400">#${i.product_id}</td>
+                    <td class="py-4 px-2 text-white/60">${new Date().toLocaleDateString()}</td>
+                    <td class="py-4 px-2 text-right"><span class="px-2 py-1 rounded-lg bg-red-500/10 text-red-500 text-[10px] font-bold uppercase">Depleted</span></td>
+                </tr>
+            `).join('') || '<tr><td colspan="3" class="py-8 text-center text-white/30 italic">No depleted units detected.</td></tr>';
+
+            const expTable = document.getElementById('expiry-report-table');
+            expTable.innerHTML = expiryReport.map(i => {
+                const isNear = new Date(i.expiry_date) < new Date(Date.now() + 2*24*60*60*1000);
+                return `
+                    <tr class="hover:bg-white/5 transition-all">
+                        <td class="py-4 px-2 font-mono text-emerald-400">#${i.item_id}</td>
+                        <td class="py-4 px-2 ${isNear ? 'text-amber-500 font-bold' : 'text-white/60'}">${new Date(i.expiry_date).toLocaleDateString()}</td>
+                        <td class="py-4 px-2 text-right">
+                            <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase 
+                                ${i.status === 'expired' ? 'bg-red-500/10 text-red-500' : (isNear ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-400')}">
+                                ${i.status}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('') || '<tr><td colspan="3" class="py-8 text-center text-white/30 italic">Clear horizon. No items tracked.</td></tr>';
+        }
+
+        async function loadPricing() {
+            const expRes = await fetch(`${baseUrl}/expiryreport`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vendor_id: vendorId })
+            });
+            const items = await expRes.json();
+
+            const select = document.getElementById('reprice-item-id');
+            select.innerHTML = '<option value="">Select ID...</option>' + items.map(i => `<option value="${i.item_id}">ID #${i.item_id} (${i.status})</option>`).join('');
+
+            const list = document.getElementById('pricing-list');
+            list.innerHTML = items.map(i => `
+                <div class="glass p-5 rounded-2xl space-y-4 group border border-transparent hover:border-emerald-500/30 transition-all">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 font-mono">Unit #${i.item_id}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${i.status === 'available' ? 'bg-blue-500/20 text-blue-400' : 'bg-amber-500/20 text-amber-500'}">${i.status}</span>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-2xl font-bold text-white">$${(i.current_price || 0).toFixed(2)}</span>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="calendar" class="w-3 h-3 text-white/40"></i>
+                            <span class="text-[10px] text-white/40 italic">Exp: ${new Date(i.expiry_date).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('reprice-item-id').value = '${i.item_id}'; window.scrollTo({top:0, behavior:'smooth'})" class="w-full py-2 rounded-xl border border-white/10 group-hover:bg-emerald-500 group-hover:text-forest-green transition-all text-[10px] font-bold uppercase tracking-widest">Select for Repricing</button>
+                </div>
+            `).join('') || '<div class="col-span-full text-center py-12 text-white/30 italic">No inventory available for re-valuation.</div>';
+            lucide.createIcons();
+        }
+
+        async function loadClaims() {
+            const res = await fetch(`${baseUrl}/claims/pending/${vendorId}`);
+            const claims = await res.json();
+
+            const body = document.getElementById('claims-table-body');
+            body.innerHTML = claims.map(c => `
+                <tr class="hover:bg-white/5 transition-all">
+                    <td class="py-5 px-4 font-mono">#${c.claim_id}</td>
+                    <td class="py-5 px-4">NGO-${c.ngo_id}</td>
+                    <td class="py-5 px-4">ITEM-${c.item_id}</td>
+                    <td class="py-5 px-4">
+                        <span class="flex items-center gap-2 text-xs">
+                            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            Awaiting Dispatch
+                        </span>
+                    </td>
+                    <td class="py-5 px-4 text-right">
+                        <button onclick="showToast('Dispatch logistics synchronized. Driver on route.', 'success')" class="px-4 py-1.5 rounded-lg bg-emerald-500 text-forest-green text-[10px] font-bold uppercase">Authorize Release</button>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="5" class="py-12 text-center text-white/20 italic">No pending pickup requests.</td></tr>';
+        }
+
+        async function loadNotifications() {
+            const res = await fetch(`${baseUrl}/notifications/unread/${vendorId}`);
+            const data = await res.json();
+            
+            const list = document.getElementById('notif-list');
+            const count = document.getElementById('unread-count');
+            const dot = document.getElementById('notif-dot');
+
+            if (data.length > 0) {
+                count.innerText = `${data.length} Unread`;
+                dot.classList.remove('hidden');
+                list.innerHTML = data.map(n => `
+                    <div class="p-3 rounded-xl bg-white/5 border border-white/10">
+                        <p class="font-medium text-emerald-400">Surplus Alert</p>
+                        <p class="text-white/60 text-xs mt-1">${n.message}</p>
+                    </div>
+                `).join('');
+            } else {
+                count.innerText = `0 Unread`;
+                dot.classList.add('hidden');
+                list.innerHTML = `<p class="text-center py-4 text-white/40 italic">No new signals detected.</p>`;
+            }
+        }
+
+        // Actions
+        async function addStock(e) {
+            e.preventDefault();
+            const payload = {
+                product_id: document.getElementById('modal-product-id').value,
+                vendor_id: vendorId,
+                quantity: document.getElementById('modal-quantity').value,
+                original_price: document.getElementById('modal-orig-price').value,
+                current_price: document.getElementById('modal-curr-price').value,
+                expiry_date: document.getElementById('modal-expiry').value
+            };
+
+            const res = await fetch(`${baseUrl}/addstock`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                showToast("Unit registration successful. Inventory updated.", "success");
+                closeModal('addStockModal');
+                document.getElementById('add-stock-form').reset();
+                refreshData();
+            } else {
+                showToast("Protocol failure. Verify input data.", "error");
+            }
+        }
+        document.getElementById('add-stock-form').addEventListener('submit', addStock);
+
+        async function updatePrice() {
+            const itemId = document.getElementById('reprice-item-id').value;
+            const newPrice = document.getElementById('new-price-input').value;
+            if (!itemId || !newPrice) return showToast("Target ID and Valuation required.", "warning");
+
+            const res = await fetch(`${baseUrl}/updateprice`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ item_id: itemId, new_price: newPrice })
+            });
+
+            if (res.ok) {
+                showToast("Market price adjusted successfully.", "success");
+                document.getElementById('new-price-input').value = '';
+                refreshData();
+            }
+        }
+
+        async function getLowStock() {
+            const threshold = document.getElementById('low-stock-threshold').value || 10;
+            const res = await fetch(`${baseUrl}/lowstock`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vendor_id: vendorId, threshold })
+            });
+            const data = await res.json();
+            if (data.length > 0) {
+                showToast(`${data.length} items flagged for critical replenishment.`, "warning");
+                // Switch to inventory to show if we had a dedicated UI, for now just toast
+            } else {
+                showToast("All stock levels within operational range.", "success");
+            }
+        }
+
+        async function triggerRefresh() {
+            const res = await fetch(`${baseUrl}/inventory/refresh`, { method: 'POST' });
+            if (res.ok) {
+                showToast("Inventory optimization algorithms executed.", "success");
+                refreshData();
+            }
+        }
+
+        // Account Actions
+        async function updatePhone() {
+            const phone = document.getElementById('settings-phone').value;
+            const res = await fetch(`${baseUrl}/updatephone`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: vendorId, phone_number: phone })
+            });
+            if (res.ok) showToast("Phone credentials synchronized.", "success");
+        }
+        async function updateEmail() {
+            const email = document.getElementById('settings-email').value;
+            const res = await fetch(`${baseUrl}/updateemail`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: vendorId, email: email })
+            });
+            if (res.ok) showToast("Contact node updated.", "success");
+        }
+        async function updatePassword() {
+            const pass = document.getElementById('settings-password').value;
+            const res = await fetch(`${baseUrl}/updatepassword`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: vendorId, password_hash: pass })
+            });
+            if (res.ok) showToast("Access passcode encrypted.", "success");
+        }
+        async function deleteAccount() {
+            if (confirm("WARNING: Proceed with permanent facility data erasure?")) {
+                const res = await fetch(`${baseUrl}/deleteuser`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: vendorId })
+                });
+                if (res.ok) {
+                    alert("License terminated. Redirecting to terminal...");
+                    logout();
+                }
+            }
+        }
+
+        // Charts
+        function renderTrendChart(data) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            if (charts.trend) charts.trend.destroy();
+            
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const labels = data.map(d => months[d.month_num - 1]);
+            const values = data.map(d => d.total_orders);
+
+            charts.trend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Rescue Missions',
+                        data: values,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.4)' } },
+                        x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.4)' } }
+                    }
+                }
+            });
+        }
+
+        function renderSummaryChart(data) {
+            const ctx = document.getElementById('summaryChart').getContext('2d');
+            if (charts.summary) charts.summary.destroy();
+
+            const labels = data.map(d => d.status.toUpperCase());
+            const values = data.map(d => d.count_per_status);
+
+            charts.summary = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: 'white', padding: 20, font: { size: 10, weight: 'bold' } } }
+                    }
+                }
+            });
+        }
+
+        // Utility
+        function showToast(msg, type = "info") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                'success': 'bg-emerald-500 text-forest-green',
+                'error': 'bg-red-500 text-white',
+                'warning': 'bg-amber-500 text-forest-green',
+                'info': 'bg-blue-500 text-white'
+            };
+            toast.className = `${colors[type]} px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-bold animate-in slide-in-from-right-full duration-300`;
+            toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-5 h-5"></i><span>${msg}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => {
+                toast.classList.add('animate-out', 'fade-out', 'slide-out-to-right-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function toggleNotifications() {
+            document.getElementById('notif-dropdown').classList.toggle('hidden');
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../index.html';
+        }
+
+        // Start
+        refreshData();
+        setInterval(loadNotifications, 30000); // Check notifications every 30s
+    </script>
 </body>
 </html>

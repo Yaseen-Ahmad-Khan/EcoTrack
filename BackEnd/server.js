@@ -18,7 +18,7 @@ app.listen(5000,()=>{
     console.log("Server Running on port 5000");
 });
 const config = {
-    server: 'DESKTOP-LTPKS4P\\SQLEXPRESS', 
+    server: 'DESKTOP-L6BTPFI\\SQLEXPRESS', 
     database: 'ecotrack',
     driver: 'ODBC Driver 18 for SQL Server',
     options: {
@@ -206,7 +206,7 @@ app.get('/displaydiscounted',async (req,res)=>
     res.json(result.recordset);
 });
 
-app.get('/filterbycategory', async (req, res) => {
+app.post('/filterbycategory', async (req, res) => {
     await sql.connect(config);
     const { category_name } = req.body;
     
@@ -221,7 +221,7 @@ app.get('/filterbycategory', async (req, res) => {
     res.json(result.recordset);
 });
 
-app.get('/filterbyprice', async (req, res) => {
+app.post('/filterbyprice', async (req, res) => {
     await sql.connect(config);
     const { min_price, max_price } = req.body;
 
@@ -251,7 +251,7 @@ app.get('/topvendors', async (req, res) => {
     res.json(result.recordset);
 });
 
-app.get('/orderhistory', async (req, res) => {
+app.post('/orderhistory', async (req, res) => {
     await sql.connect(config);
     const { buyer_id } = req.body;
 
@@ -329,7 +329,7 @@ app.delete('/deleteuser', async (req, res) => {
     res.send("User deleted successfully");
 });
 
-app.get('/filterbyrole', async (req, res) => {
+app.post('/filterbyrole', async (req, res) => {
     await sql.connect(config);
     const { role } = req.body;
 
@@ -366,7 +366,7 @@ app.post('/addstock', async (req, res) => {
     res.send("Stock added successfully");
 });
 
-app.get('/lowstock', async (req, res) => {
+app.post('/lowstock', async (req, res) => {
     await sql.connect(config);
     const { vendor_id, threshold } = req.body;
     const min_qty = threshold || 10;
@@ -380,12 +380,12 @@ app.get('/lowstock', async (req, res) => {
     res.json(result.recordset);
 });
 
-app.get('/expiryreport', async (req, res) => {
+app.post('/expiryreport', async (req, res) => {
     await sql.connect(config);
     const { vendor_id } = req.body;
 
     const result = await sql.query`
-        SELECT item_id, expiry_date, status
+        SELECT *
         FROM inventory
         WHERE vendor_id = ${vendor_id}
         ORDER BY expiry_date ASC
@@ -407,7 +407,7 @@ app.post('/updateprice', async (req, res) => {
     res.send("Price updated successfully");
 });
 
-app.get('/stocksummary', async (req, res) => {
+app.post('/stocksummary', async (req, res) => {
     await sql.connect(config);
     const { vendor_id } = req.body;
 
