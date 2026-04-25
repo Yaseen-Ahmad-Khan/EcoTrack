@@ -28,7 +28,7 @@ app.listen(5000, () => {
     console.log("Server Running on port 5000");
 });
 const config = {
-    server: 'PC',
+    server: 'DESKTOP-LTPKS4P\\SQLEXPRESS',
     database: 'ecotrack',
     driver: 'ODBC Driver 18 for SQL Server',
     options: {
@@ -538,12 +538,12 @@ app.get('/donations/available', async (req, res) => {
 
 app.post('/claims/create', async (req, res) => {
     try {
-        const { item_id, ngo_id } = req.body;
+        const { item_id, ngo_id, quantity } = req.body;
         await sql.connect(config);
 
         await sql.query`
-            INSERT INTO claims (item_id, ngo_id, claim_status) 
-            VALUES (${item_id}, ${ngo_id}, 'pending')
+            INSERT INTO claims (item_id, ngo_id, claim_status, quantity_claimed) 
+            VALUES (${item_id}, ${ngo_id}, 'pending', ${quantity || 1})
         `;
 
         res.status(201).send({ message: "Claim submitted successfully" });
