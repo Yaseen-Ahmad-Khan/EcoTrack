@@ -1,6 +1,16 @@
-const express=require('express');
-const app=express();
+const express = require('express');
+const path = require('path');
+const app = express();
 app.use(express.json());
+
+// Serve static frontend files and assets
+app.use('/FrontEnd', express.static(path.join(__dirname, '..', 'FrontEnd')));
+app.use('/Assets', express.static(path.join(__dirname, '..', 'Assets')));
+
+// Root redirect to frontend landing page
+app.get('/', (req, res) => {
+    res.redirect('/FrontEnd/index.html');
+});
 
 // Enable CORS
 app.use((req, res, next) => {
@@ -13,25 +23,24 @@ app.use((req, res, next) => {
     next();
 });
 
-const sql=require('mssql/msnodesqlv8');
-app.listen(5000,()=>{
+const sql = require('mssql/msnodesqlv8');
+app.listen(5000, () => {
     console.log("Server Running on port 5000");
 });
 const config = {
-    server: 'DESKTOP-L6BTPFI\\SQLEXPRESS', 
+    server: 'PC',
     database: 'ecotrack',
     driver: 'ODBC Driver 18 for SQL Server',
     options: {
         trustedConnection: true,
-        trustServerCertificate: true 
+        trustServerCertificate: true
     }
 };
 
 //displaying users(http://localhost:3000/displayallusers)
-app.get('/displayallusers',async (req,res)=>
-{
+app.get('/displayallusers', async (req, res) => {
     await sql.connect(config);
-    const result=await sql.query('select * from users');
+    const result = await sql.query('select * from users');
     res.json(result.recordset);
 });
 
@@ -40,12 +49,12 @@ app.post('/registeruser', async (req, res) => {
     try {
         const { full_name, email, password_hash, role, phone_number, address } = req.body;
         await sql.connect(config);
-        
+
         await sql.query`
             INSERT INTO users (full_name, email, password_hash, role, phone_number, address) 
             VALUES (${full_name}, ${email}, ${password_hash}, ${role}, ${phone_number || null}, ${address || null})
         `;
-        
+
         res.status(201).json({ message: "User registered successfully!" });
     } catch (err) {
         res.status(400).json({ error: "Registration Failed: " + err.message });
@@ -57,17 +66,17 @@ app.get('/profile/:id', async (req, res) => {
     try {
         await sql.connect(config);
         const { id } = req.params;
-        
+
         const result = await sql.query`
             SELECT users.full_name, users.email, loyalty_points.points_earned 
             FROM users 
             LEFT JOIN loyalty_points ON users.user_id = loyalty_points.user_id 
             WHERE users.user_id = ${id}
         `;
-        
+
         res.json(result.recordset);
-    } catch (err) { 
-        res.status(500).send(err.message); 
+    } catch (err) {
+        res.status(500).send(err.message);
     }
 });
 
@@ -76,19 +85,19 @@ app.post('/login', async (req, res) => {
     try {
         await sql.connect(config);
         const { email, password, role } = req.body;
-        
+
         const result = await sql.query`
             SELECT user_id, password_hash, role 
             FROM users 
             WHERE email = ${email}
         `;
-        
+
         if (result.recordset.length === 0) {
             return res.status(401).json({ error: "Invalid email or password" });
         }
-        
+
         const user = result.recordset[0];
-        
+
         if (user.password_hash !== password) {
             return res.status(401).json({ error: "Invalid email or password" });
         }
@@ -96,10 +105,10 @@ app.post('/login', async (req, res) => {
         if (user.role !== role) {
             return res.status(403).json({ error: "Account type mismatch. Please select the correct login tab." });
         }
-        
+
         res.json({ message: "Login successful", role: user.role, user_id: user.user_id });
-    } catch (err) { 
-        res.status(500).json({ error: err.message }); 
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -108,14 +117,14 @@ app.get('/inventory/total/:vid', async (req, res) => {
     try {
         await sql.connect(config);
         const { vid } = req.params;
-        
+
         const result = await sql.query`
             SELECT COUNT(item_id) AS total_items 
             FROM inventory 
             WHERE vendor_id = ${vid}
         `;
-        
-        res.json(result.recordset[0]); 
+
+        res.json(result.recordset[0]);
     } catch (err) {
         res.status(500).send("Error fetching count: " + err.message);
     }
@@ -126,8 +135,8 @@ app.get('/analytics/total-saved', async (req, res) => {
     try {
         await sql.connect(config);
         const result = await sql.query('SELECT SUM(quantity_ordered) AS total_items_saved FROM orders');
-        
-        res.json(result.recordset[0]); 
+
+        res.json(result.recordset[0]);
     } catch (err) {
         res.status(500).send("Error calculating total saved: " + err.message);
     }
@@ -137,10 +146,10 @@ app.get('/analytics/total-saved', async (req, res) => {
 app.get('/analytics/co2-saved', async (req, res) => {
     try {
         await sql.connect(config);
-        
+
         const result = await sql.query('SELECT SUM(quantity_ordered * 2.5) AS total_co2_saved_kg FROM orders');
-        
-        res.json(result.recordset[0]); 
+
+        res.json(result.recordset[0]);
     } catch (err) {
         res.status(500).send("Error calculating CO2 impact: " + err.message);
     }
@@ -151,7 +160,7 @@ app.get('/analytics/revenue/:vid', async (req, res) => {
     try {
         await sql.connect(config);
         const { vid } = req.params;
-        
+
         const result = await sql.query`
             SELECT SUM(orders.total_amount) AS revenue_recovered 
             FROM orders 
@@ -159,8 +168,8 @@ app.get('/analytics/revenue/:vid', async (req, res) => {
             WHERE inventory.vendor_id = ${vid} 
             AND orders.order_type = 'purchase'
         `;
-        
-        res.json(result.recordset[0]); 
+
+        res.json(result.recordset[0]);
     } catch (err) {
         res.status(500).send("Error calculating revenue: " + err.message);
     }
@@ -170,10 +179,10 @@ app.get('/analytics/revenue/:vid', async (req, res) => {
 app.get('/analytics/completed-donations', async (req, res) => {
     try {
         await sql.connect(config);
-        
+
         const result = await sql.query("SELECT COUNT(*) AS completed_donations FROM claims WHERE claim_status = 'collected'");
-        
-        res.json(result.recordset[0]); 
+
+        res.json(result.recordset[0]);
     } catch (err) {
         res.status(500).send("Error fetching donation count: " + err.message);
     }
@@ -183,7 +192,7 @@ app.get('/analytics/completed-donations', async (req, res) => {
 app.get('/analytics/monthly-trend', async (req, res) => {
     try {
         await sql.connect(config);
-        
+
         const result = await sql.query(`
             SELECT 
                 MONTH(order_date) AS month_num, 
@@ -192,24 +201,23 @@ app.get('/analytics/monthly-trend', async (req, res) => {
             GROUP BY MONTH(order_date)
             ORDER BY month_num ASC
         `);
-        
-        res.json(result.recordset); 
+
+        res.json(result.recordset);
     } catch (err) {
         res.status(500).send("Error fetching monthly trend: " + err.message);
     }
 });
 
-app.get('/displaydiscounted',async (req,res)=>
-{
+app.get('/displaydiscounted', async (req, res) => {
     await sql.connect(config);
-    const result=await sql.query("SELECT * FROM inventory WHERE status = 'discounted' AND quantity > 0");
+    const result = await sql.query("SELECT * FROM inventory WHERE status = 'discounted' AND quantity > 0");
     res.json(result.recordset);
 });
 
 app.post('/filterbycategory', async (req, res) => {
     await sql.connect(config);
     const { category_name } = req.body;
-    
+
     const result = await sql.query`
         SELECT inventory.*
         FROM inventory
@@ -231,7 +239,7 @@ app.post('/filterbyprice', async (req, res) => {
         AND current_price <= ${max_price}
         AND status = 'discounted'
     `;
-    
+
     res.json(result.recordset);
 });
 
@@ -265,17 +273,61 @@ app.post('/orderhistory', async (req, res) => {
 });
 
 app.post('/placeorder', async (req, res) => {
-    await sql.connect(config);
-    const { buyer_id, item_id, order_type, quantity_ordered, total_amount } = req.body;
+    try {
+        await sql.connect(config);
+        const { buyer_id, item_id, order_type, quantity_ordered, total_amount, delivery_name, delivery_phone, delivery_address } = req.body;
 
-    await sql.query`
-        INSERT INTO orders 
-        (buyer_id, item_id, order_type, quantity_ordered, total_amount)
-        VALUES 
-        (${buyer_id}, ${item_id}, ${order_type}, ${quantity_ordered}, ${total_amount})
-    `;
+        // Check available stock first
+        const stockCheck = await sql.query`
+            SELECT quantity FROM inventory WHERE item_id = ${item_id}
+        `;
+        if (stockCheck.recordset.length === 0) {
+            return res.status(404).json({ error: "Item not found in inventory." });
+        }
+        if (stockCheck.recordset[0].quantity < quantity_ordered) {
+            return res.status(400).json({ error: "Insufficient stock available." });
+        }
 
-    res.send("Order placed successfully");
+        // Insert the order
+        await sql.query`
+            INSERT INTO orders 
+            (buyer_id, item_id, order_type, quantity_ordered, total_amount)
+            VALUES 
+            (${buyer_id}, ${item_id}, ${order_type}, ${quantity_ordered}, ${total_amount})
+        `;
+
+        // Decrease inventory quantity
+        await sql.query`
+            UPDATE inventory 
+            SET quantity = quantity - ${quantity_ordered}, last_updated = GETDATE()
+            WHERE item_id = ${item_id}
+        `;
+
+        // Increment user's loyalty points (10 points per item rescued)
+        const pointsToAdd = quantity_ordered * 10;
+        
+        // Check if loyalty record exists
+        const loyaltyCheck = await sql.query`
+            SELECT reward_id FROM loyalty_points WHERE user_id = ${buyer_id}
+        `;
+
+        if (loyaltyCheck.recordset.length > 0) {
+            await sql.query`
+                UPDATE loyalty_points 
+                SET points_earned = points_earned + ${pointsToAdd}, last_updated = GETDATE()
+                WHERE user_id = ${buyer_id}
+            `;
+        } else {
+            await sql.query`
+                INSERT INTO loyalty_points (user_id, points_earned, last_updated)
+                VALUES (${buyer_id}, ${pointsToAdd}, GETDATE())
+            `;
+        }
+
+        res.status(201).json({ message: "Order placed successfully", pointsEarned: pointsToAdd });
+    } catch (err) {
+        res.status(500).json({ error: "Order failed: " + err.message });
+    }
 });
 
 app.post('/updatephone', async (req, res) => {
@@ -424,8 +476,8 @@ app.post('/stocksummary', async (req, res) => {
 // Function to run the maintenance logic
 const runAutoLogic = async () => {
     try {
-        await sql.connect(config); 
-        
+        await sql.connect(config);
+
         // 1. Auto Discount (30% off if expiring within 2 days)
         await sql.query(`
             UPDATE inventory 
@@ -478,7 +530,7 @@ app.get('/donations/available', async (req, res) => {
     try {
         await sql.connect(config);
         const result = await sql.query("SELECT * FROM inventory WHERE status = 'donated' AND quantity > 0");
-        res.json(result.recordset); 
+        res.json(result.recordset);
     } catch (err) {
         res.status(500).send(err.message);
     }
@@ -486,14 +538,14 @@ app.get('/donations/available', async (req, res) => {
 
 app.post('/claims/create', async (req, res) => {
     try {
-        const { item_id, ngo_id } = req.body; 
+        const { item_id, ngo_id } = req.body;
         await sql.connect(config);
-        
+
         await sql.query`
             INSERT INTO claims (item_id, ngo_id, claim_status) 
             VALUES (${item_id}, ${ngo_id}, 'pending')
         `;
-        
+
         res.status(201).send({ message: "Claim submitted successfully" });
     } catch (err) {
         res.status(500).send(err.message);
@@ -504,12 +556,12 @@ app.get('/claims/history/:ngo_id', async (req, res) => {
     try {
         await sql.connect(config);
         const { ngo_id } = req.params;
-        
+
         const result = await sql.query`
             SELECT * FROM claims 
             WHERE ngo_id = ${ngo_id}
         `;
-        
+
         res.json(result.recordset);
     } catch (err) {
         res.status(500).send(err.message);
@@ -520,13 +572,13 @@ app.get('/claims/pending/:vendor_id', async (req, res) => {
     try {
         await sql.connect(config);
         const { vendor_id } = req.params;
-        
+
         const result = await sql.query`
             SELECT c.* FROM claims c
             JOIN inventory i ON c.item_id = i.item_id 
             WHERE i.vendor_id = ${vendor_id} AND c.claim_status = 'pending'
         `;
-        
+
         res.json(result.recordset);
     } catch (err) {
         res.status(500).send(err.message);
@@ -547,12 +599,12 @@ app.get('/notifications/unread/:user_id', async (req, res) => {
     try {
         await sql.connect(config);
         const { user_id } = req.params;
-        
+
         const result = await sql.query`
             SELECT * FROM notifications 
             WHERE user_id = ${user_id} AND is_read = 0
         `;
-        
+
         res.json(result.recordset);
     } catch (err) {
         res.status(500).send(err.message);

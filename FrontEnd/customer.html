@@ -2,9 +2,808 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Customer Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoTrack | Customer Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --forest-green: #062016;
+            --emerald-green: #0a3d2e;
+            --soft-amber: #fbbf24;
+            --crisp-white: #f8fafc;
+            --glass-bg: rgba(6, 32, 22, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --neon-glow: rgba(16, 185, 129, 0.3);
+        }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--forest-green);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+            color: var(--crisp-white);
+            min-height: 100vh;
+        }
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+        .sidebar-item { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-item.active {
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.15) 0%, transparent 100%);
+            border-left: 4px solid var(--soft-amber);
+            color: var(--soft-amber);
+        }
+        .sidebar-item:hover:not(.active) { transform: translateX(5px); color: #10b981; }
+        input, select {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            border-radius: 12px !important;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #064e3b 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover { transform: scale(1.02); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+        .float-icon { animation: float 8s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.2)); }
+        @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-30px) rotate(10deg); } }
+        .stat-card:hover { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.4); transform: translateY(-5px); }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+    </style>
 </head>
-<body>
-    <h1>customer tabs here</h1>
+<body class="flex overflow-hidden relative">
+
+    <!-- Decorative Floating Icons & Particles -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <!-- Floating Nature & Food Icons -->
+        <i data-lucide="leaf" class="float-icon absolute top-[10%] left-[5%] text-emerald-500/20 w-12 h-12" style="animation-delay: 0s;"></i>
+        <i data-lucide="sprout" class="float-icon absolute top-[70%] left-[80%] text-emerald-500/10 w-20 h-20" style="animation-delay: 2s;"></i>
+        <i data-lucide="flower-2" class="float-icon absolute top-[40%] left-[90%] text-emerald-500/15 w-16 h-16" style="animation-delay: 4s;"></i>
+        <i data-lucide="wind" class="float-icon absolute top-[20%] left-[70%] text-emerald-500/10 w-24 h-24" style="animation-delay: 1s;"></i>
+        <i data-lucide="apple" class="float-icon absolute top-[15%] left-[25%] text-red-500/10 w-14 h-14" style="animation-delay: 3s;"></i>
+        <i data-lucide="cookie" class="float-icon absolute top-[80%] left-[15%] text-amber-600/10 w-12 h-12" style="animation-delay: 5s;"></i>
+        <i data-lucide="pizza" class="float-icon absolute top-[50%] left-[35%] text-amber-400/10 w-20 h-20" style="animation-delay: 2.5s;"></i>
+        <i data-lucide="beef" class="float-icon absolute top-[30%] left-[60%] text-red-400/10 w-16 h-16" style="animation-delay: 6s;"></i>
+        <i data-lucide="carrot" class="float-icon absolute top-[90%] left-[50%] text-orange-400/10 w-14 h-14" style="animation-delay: 1.5s;"></i>
+        <i data-lucide="sandwich" class="float-icon absolute top-[10%] left-[85%] text-emerald-400/10 w-12 h-12" style="animation-delay: 7s;"></i>
+        <i data-lucide="cake" class="float-icon absolute top-[60%] left-[25%] text-pink-400/10 w-18 h-18" style="animation-delay: 4.5s;"></i>
+        <i data-lucide="fish" class="float-icon absolute top-[45%] left-[10%] text-blue-400/10 w-14 h-14" style="animation-delay: 8s;"></i>
+        <i data-lucide="citrus" class="float-icon absolute top-[75%] left-[45%] text-yellow-400/10 w-12 h-12" style="animation-delay: 2.2s;"></i>
+        <i data-lucide="egg" class="float-icon absolute top-[25%] left-[95%] text-white/10 w-10 h-10" style="animation-delay: 3.5s;"></i>
+        <i data-lucide="grape" class="float-icon absolute top-[5%] left-[55%] text-purple-400/10 w-16 h-16" style="animation-delay: 9s;"></i>
+        <i data-lucide="croissant" class="float-icon absolute top-[85%] left-[70%] text-amber-300/10 w-16 h-16" style="animation-delay: 5.5s;"></i>
+        <i data-lucide="banana" class="float-icon absolute top-[35%] left-[15%] text-yellow-300/10 w-14 h-14" style="animation-delay: 10s;"></i>
+        <i data-lucide="soup" class="float-icon absolute top-[65%] left-[90%] text-orange-300/10 w-14 h-14" style="animation-delay: 4.8s;"></i>
+
+        <!-- More Nature -->
+        <i data-lucide="tree-pine" class="float-icon absolute top-[60%] left-[5%] text-emerald-600/10 w-32 h-32" style="animation-delay: 1.5s; animation-duration: 12s;"></i>
+        <i data-lucide="shrub" class="float-icon absolute top-[80%] left-[85%] text-emerald-700/10 w-24 h-24" style="animation-delay: 6.5s; animation-duration: 15s;"></i>
+        <i data-lucide="flower" class="float-icon absolute top-[10%] left-[45%] text-emerald-400/15 w-10 h-10" style="animation-delay: 2.8s;"></i>
+        
+        <!-- Glowing Particles -->
+        <div class="absolute top-[30%] left-[20%] w-2 h-2 bg-emerald-400 rounded-full blur-[2px] animate-pulse" style="animation-duration: 3s;"></div>
+        <div class="absolute top-[50%] left-[60%] w-3 h-3 bg-emerald-500 rounded-full blur-[3px] animate-pulse" style="animation-duration: 4s;"></div>
+        <div class="absolute top-[80%] left-[30%] w-2 h-2 bg-soft-amber rounded-full blur-[2px] animate-pulse" style="animation-duration: 5s;"></div>
+        <div class="absolute top-[10%] left-[80%] w-1.5 h-1.5 bg-emerald-300 rounded-full blur-[1px] animate-pulse" style="animation-duration: 2.5s;"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="w-64 glass h-screen flex flex-col border-r border-white/10 z-50">
+        <div class="p-8">
+            <h1 class="text-2xl font-bold tracking-tighter flex items-center gap-2">
+                <i data-lucide="leaf" class="text-emerald-400"></i>
+                Eco<span class="text-emerald-400">Track</span>
+            </h1>
+            <p class="text-[10px] uppercase tracking-widest text-emerald-400/60 mt-1 font-semibold">Customer Explorer</p>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <button onclick="showSection('overview')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all active" id="nav-overview">
+                <i data-lucide="compass" class="w-5 h-5"></i>
+                <span class="font-medium">Explorer</span>
+            </button>
+            <button onclick="showSection('marketplace')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all" id="nav-marketplace">
+                <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                <span class="font-medium">Marketplace</span>
+            </button>
+            <button onclick="showSection('reservations')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all" id="nav-reservations">
+                <i data-lucide="bookmark" class="w-5 h-5"></i>
+                <span class="font-medium">My Reservations</span>
+            </button>
+            <button onclick="showSection('settings')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all" id="nav-settings">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+                <span class="font-medium">Settings</span>
+            </button>
+        </nav>
+
+        <div class="p-4 mt-auto">
+            <div class="glass rounded-2xl p-4 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                    <i data-lucide="user" class="text-emerald-400 w-5 h-5"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-semibold truncate" id="user-name">Loading...</p>
+                    <p class="text-[10px] text-emerald-400 uppercase tracking-tighter font-bold" id="user-points">0 Points</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-red-400 hover:bg-red-400/10 transition-all text-sm font-medium">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-8 hide-scroll relative z-10">
+        <!-- Top Nav Bar -->
+        <div class="flex justify-between items-center mb-10">
+            <div>
+                <h2 class="text-3xl font-bold" id="section-title">Explorer Dashboard</h2>
+                <p class="text-white/60 mt-1" id="section-subtitle">Discover sustainable surplus options near you.</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="refreshData()" class="btn-primary px-6 py-3 rounded-2xl font-semibold flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                    Sync Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Sections Container -->
+        <div id="content-area">
+            
+            <!-- OVERVIEW SECTION -->
+            <div id="section-overview" class="section-container space-y-8 animate-in fade-in duration-700">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass stat-card p-6 rounded-3xl group transition-all">
+                        <div class="flex justify-between items-start">
+                            <div class="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400">
+                                <i data-lucide="leaf" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs text-white/30 font-bold uppercase tracking-widest">Personal Impact</span>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="text-4xl font-bold" id="stat-personal-co2">0.0</h3>
+                            <p class="text-xs text-white/50 mt-1 italic">Est. kg CO2 offset from your rescues</p>
+                        </div>
+                    </div>
+
+                    <div class="glass stat-card p-6 rounded-3xl group transition-all">
+                        <div class="flex justify-between items-start">
+                            <div class="p-3 rounded-2xl bg-amber-500/10 text-amber-500">
+                                <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs text-white/30 font-bold uppercase tracking-widest">Items Rescued</span>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="text-4xl font-bold" id="stat-personal-items">0</h3>
+                            <p class="text-xs text-white/50 mt-1 italic">Total surplus goods saved</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass p-8 rounded-3xl">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="zap" class="text-amber-400"></i>
+                        Featured Nearing Expiry (30% Off)
+                    </h3>
+                    <div id="featured-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Populated by JS -->
+                        <div class="col-span-full py-8 text-center text-white/40 italic">Scanning local network for deals...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MARKETPLACE SECTION -->
+            <div id="section-marketplace" class="section-container hidden space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                <div class="glass p-6 rounded-3xl flex flex-col md:flex-row gap-4 justify-between items-center">
+                    <div class="flex gap-4 w-full md:w-auto">
+                        <div class="relative flex-1 md:w-64">
+                            <input type="text" id="filter-category" placeholder="Category (e.g. Produce)" class="w-full pl-10 pr-4 py-3 glass rounded-2xl text-sm">
+                            <i data-lucide="search" class="absolute left-3 top-3.5 w-4 h-4 text-white/40"></i>
+                        </div>
+                        <button onclick="applyCategoryFilter()" class="glass px-6 py-3 rounded-2xl hover:border-emerald-500 transition-all font-medium text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                            Filter
+                        </button>
+                    </div>
+                    
+                    <div class="flex gap-2 w-full md:w-auto items-center">
+                        <input type="number" id="filter-min-price" placeholder="Min $" class="w-24 px-4 py-3 glass rounded-2xl text-sm">
+                        <span class="text-white/40">-</span>
+                        <input type="number" id="filter-max-price" placeholder="Max $" class="w-24 px-4 py-3 glass rounded-2xl text-sm">
+                        <button onclick="applyPriceFilter()" class="glass px-6 py-3 rounded-2xl hover:border-amber-500 transition-all font-medium text-amber-500 border border-amber-500/20 whitespace-nowrap">
+                            Apply
+                        </button>
+                        <button onclick="loadMarketplace()" class="glass p-3 rounded-2xl hover:border-white/40 transition-all ml-2" title="Clear Filters">
+                            <i data-lucide="x" class="w-5 h-5 text-white/60"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="marketplace-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- RESERVATIONS SECTION -->
+            <div id="section-reservations" class="section-container hidden space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                <div class="glass p-8 rounded-3xl">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="history" class="text-emerald-400"></i>
+                        My Claim & Purchase History
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-white/40 border-b border-white/10 uppercase tracking-widest text-[10px] font-bold">
+                                    <th class="pb-4 px-4">Order ID</th>
+                                    <th class="pb-4 px-4">Date</th>
+                                    <th class="pb-4 px-4">Item ID</th>
+                                    <th class="pb-4 px-4">Qty</th>
+                                    <th class="pb-4 px-4">Total Amount</th>
+                                    <th class="pb-4 px-4 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body" class="divide-y divide-white/5">
+                                <!-- Dynamic claims -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS SECTION -->
+            <div id="section-settings" class="section-container hidden space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="glass p-8 rounded-3xl space-y-6">
+                        <h3 class="text-xl font-bold flex items-center gap-2">
+                            <i data-lucide="user-cog" class="text-emerald-400"></i>
+                            Account Details
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Phone Number</label>
+                                    <input type="text" id="settings-phone" class="w-full glass rounded-xl px-4 py-3 text-sm">
+                                </div>
+                                <div class="space-y-1 pt-5">
+                                    <button onclick="updatePhone()" class="w-full glass py-3 rounded-xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-sm font-bold transition-all">Sync Phone</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Email Address</label>
+                                    <input type="email" id="settings-email" class="w-full glass rounded-xl px-4 py-3 text-sm">
+                                </div>
+                                <div class="space-y-1 pt-5">
+                                    <button onclick="updateEmail()" class="w-full glass py-3 rounded-xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-sm font-bold transition-all">Sync Email</button>
+                                </div>
+                            </div>
+                            <hr class="border-white/10 my-4">
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Update Passcode</label>
+                                <input type="password" id="settings-password" placeholder="New Passcode" class="w-full glass rounded-xl px-4 py-3 text-sm">
+                                <button onclick="updatePassword()" class="w-full btn-primary py-3 rounded-xl font-bold">Update Passcode</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Checkout Modal (Multi-Step) -->
+    <div id="purchaseModal" class="fixed inset-0 bg-forest-green/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass w-full max-w-md rounded-3xl p-8 border-white/20 animate-in zoom-in-95 duration-300 my-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-emerald-400" id="checkout-title">Secure Checkout</h3>
+                <button onclick="closeCheckout()" class="text-white/40 hover:text-white"><i data-lucide="x"></i></button>
+            </div>
+
+            <!-- Step Indicator -->
+            <div class="flex items-center justify-center gap-2 mb-8">
+                <div id="step-dot-1" class="w-3 h-3 rounded-full bg-emerald-400 transition-all"></div>
+                <div class="w-8 h-[2px] bg-white/10"></div>
+                <div id="step-dot-2" class="w-3 h-3 rounded-full bg-white/20 transition-all"></div>
+                <div class="w-8 h-[2px] bg-white/10"></div>
+                <div id="step-dot-3" class="w-3 h-3 rounded-full bg-white/20 transition-all"></div>
+            </div>
+
+            <!-- STEP 1: Order Summary -->
+            <div id="checkout-step-1" class="space-y-4">
+                <div class="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <p class="text-xs text-white/50 uppercase tracking-widest font-bold mb-1">Item Reference</p>
+                    <p class="font-mono text-lg" id="modal-item-id-display">#---</p>
+                </div>
+                <div class="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <p class="text-xs text-white/50 uppercase tracking-widest font-bold mb-1">Unit Price</p>
+                    <p class="text-lg font-bold" id="modal-unit-price-display">$0.00</p>
+                </div>
+
+                <input type="hidden" id="modal-item-id">
+                <input type="hidden" id="modal-item-price">
+                <input type="hidden" id="modal-item-max-qty">
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Quantity</label>
+                    <input type="number" id="modal-purchase-qty" value="1" min="1" class="w-full glass rounded-xl px-4 py-3 text-sm" oninput="updateModalTotal()">
+                </div>
+
+                <div class="flex justify-between items-center p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                    <p class="text-sm font-bold text-emerald-400">Order Total</p>
+                    <p class="text-2xl font-bold text-emerald-300" id="modal-item-price-display">$0.00</p>
+                </div>
+
+                <button onclick="goToStep(2)" class="w-full btn-primary py-4 rounded-xl font-bold mt-2 flex justify-center items-center gap-2">
+                    Proceed to Delivery <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- STEP 2: Delivery Info (Cash on Delivery) -->
+            <div id="checkout-step-2" class="space-y-4 hidden">
+                <div class="p-4 bg-amber-500/10 rounded-xl border border-amber-500/20 flex items-center gap-3">
+                    <i data-lucide="banknote" class="w-6 h-6 text-amber-400"></i>
+                    <div>
+                        <p class="text-sm font-bold text-amber-400">Cash on Delivery</p>
+                        <p class="text-[10px] text-white/50">Pay when your order arrives at your doorstep.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Full Name</label>
+                    <input type="text" id="delivery-name" placeholder="Your full name" required class="w-full glass rounded-xl px-4 py-3 text-sm">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Phone Number</label>
+                    <input type="tel" id="delivery-phone" placeholder="e.g. 0300-1234567" required class="w-full glass rounded-xl px-4 py-3 text-sm">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Delivery Address</label>
+                    <textarea id="delivery-address" rows="3" placeholder="Full street address, city, zip code" required class="w-full glass rounded-xl px-4 py-3 text-sm" style="resize: none;"></textarea>
+                </div>
+
+                <div class="flex gap-3 mt-2">
+                    <button onclick="goToStep(1)" class="flex-1 glass py-3 rounded-xl font-bold text-white/60 hover:text-white transition-all flex justify-center items-center gap-2">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
+                    </button>
+                    <button onclick="confirmPurchase()" id="btn-confirm-order" class="flex-[2] btn-primary py-3 rounded-xl font-bold flex justify-center items-center gap-2">
+                        <i data-lucide="shield-check" class="w-5 h-5"></i> Confirm Order
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Order Confirmed -->
+            <div id="checkout-step-3" class="hidden text-center space-y-6 py-4">
+                <div class="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto border-2 border-emerald-500/40">
+                    <i data-lucide="check" class="w-10 h-10 text-emerald-400"></i>
+                </div>
+                <div>
+                    <h4 class="text-2xl font-bold text-emerald-400">Order Confirmed!</h4>
+                    <p class="text-white/50 text-sm mt-2">Your rescue mission has been deployed. Pay <span class="text-amber-400 font-bold" id="confirmed-total">$0.00</span> on delivery.</p>
+                </div>
+                <div class="glass p-4 rounded-xl text-left space-y-2 text-sm">
+                    <div class="flex justify-between"><span class="text-white/40">Item</span><span class="font-mono" id="confirmed-item">#---</span></div>
+                    <div class="flex justify-between"><span class="text-white/40">Qty</span><span id="confirmed-qty">1</span></div>
+                    <div class="flex justify-between"><span class="text-white/40">Deliver To</span><span id="confirmed-name">---</span></div>
+                    <div class="flex justify-between border-t border-white/10 pt-2 mt-2"><span class="text-emerald-400 font-bold">Loyalty Points Earned</span><span class="text-emerald-400 font-bold" id="confirmed-points">+0</span></div>
+                </div>
+                <button onclick="closeCheckout()" class="w-full btn-primary py-4 rounded-xl font-bold flex justify-center items-center gap-2">
+                    <i data-lucide="shopping-bag" class="w-5 h-5"></i> Continue Shopping
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification System -->
+    <div id="toast-container" class="fixed bottom-8 right-8 z-[200] space-y-4"></div>
+
+    <script>
+        // Init Lucide
+        lucide.createIcons();
+
+        // Data Management - default to 2 if not set (Customer)
+        const customerId = localStorage.getItem('user_id') || 2; 
+        const baseUrl = 'http://localhost:5000';
+
+        // State Management
+        let currentSection = 'overview';
+        let userPoints = 0;
+
+        // Navigation
+        function showSection(section) {
+            document.querySelectorAll('.section-container').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`section-${section}`).classList.remove('hidden');
+            document.getElementById(`nav-${section}`).classList.add('active');
+            
+            currentSection = section;
+            updateSectionText(section);
+            refreshData();
+        }
+
+        function updateSectionText(section) {
+            const titles = {
+                'overview': { t: 'Explorer Dashboard', s: 'Discover sustainable surplus options near you.' },
+                'marketplace': { t: 'Surplus Marketplace', s: 'Browse all available discounted eco-friendly products.' },
+                'reservations': { t: 'My Reservations', s: 'Track your personal environmental impact and past purchases.' },
+                'settings': { t: 'Account Settings', s: 'Manage your profile and communication preferences.' }
+            };
+            document.getElementById('section-title').innerText = titles[section].t;
+            document.getElementById('section-subtitle').innerText = titles[section].s;
+        }
+
+        // Modals
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+
+        // API Interactions
+        async function refreshData() {
+            try {
+                // Common profile info
+                const profRes = await fetch(`${baseUrl}/profile/${customerId}`);
+                const profData = await profRes.json();
+                if (profData && profData.length > 0) {
+                    document.getElementById('user-name').innerText = profData[0].full_name;
+                    document.getElementById('settings-phone').value = profData[0].phone_number || '';
+                    document.getElementById('settings-email').value = profData[0].email;
+                    userPoints = profData[0].points_earned || 0;
+                    document.getElementById('user-points').innerText = `${userPoints} Loyalty Points`;
+                }
+
+                if (currentSection === 'overview') loadOverview();
+                if (currentSection === 'marketplace') loadMarketplace();
+                if (currentSection === 'reservations') loadReservations();
+                
+            } catch (err) {
+                console.error("Refresh Error:", err);
+                showToast("System error: Unable to sync with network.", "error");
+            }
+        }
+
+        async function loadOverview() {
+            try {
+                // Calculate personal impact metrics from order history
+                // Note: using POST for /orderhistory as per strict instructions
+                const historyRes = await fetch(`${baseUrl}/orderhistory`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ buyer_id: customerId })
+                });
+                const orders = await historyRes.json();
+                
+                let totalItems = 0;
+                orders.forEach(o => {
+                    if(o.order_type === 'purchase') {
+                        totalItems += o.quantity_ordered;
+                    }
+                });
+
+                // Assuming 2.5kg CO2 saved per item (as in server.js)
+                const totalCo2 = (totalItems * 2.5).toFixed(1);
+
+                document.getElementById('stat-personal-items').innerText = totalItems;
+                document.getElementById('stat-personal-co2').innerText = totalCo2;
+
+                // Load Featured items
+                const discRes = await fetch(`${baseUrl}/displaydiscounted`);
+                const discountedItems = await discRes.json();
+                
+                // Get a few near-expiry items for featured (e.g., sort by expiry, slice top 3)
+                const featured = discountedItems
+                    .sort((a, b) => new Date(a.expiry_date) - new Date(b.expiry_date))
+                    .slice(0, 3);
+                
+                renderItemGrid(featured, 'featured-grid');
+
+            } catch(e) {
+                console.error("Overview error", e);
+            }
+        }
+
+        async function loadMarketplace() {
+            try {
+                const res = await fetch(`${baseUrl}/displaydiscounted`);
+                const items = await res.json();
+                renderItemGrid(items, 'marketplace-grid');
+            } catch(e) {
+                console.error(e);
+                showToast("Failed to fetch marketplace data.", "error");
+            }
+        }
+
+        async function applyCategoryFilter() {
+            const cat = document.getElementById('filter-category').value.trim();
+            if(!cat) return loadMarketplace();
+            
+            try {
+                // Using POST for /filterbycategory as required by the backend implementation
+                const res = await fetch(`${baseUrl}/filterbycategory`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ category_name: cat })
+                });
+                const items = await res.json();
+                renderItemGrid(items, 'marketplace-grid');
+                showToast(`Filtered by category: ${cat}`, "info");
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function applyPriceFilter() {
+            const min = parseFloat(document.getElementById('filter-min-price').value) || 0;
+            const max = parseFloat(document.getElementById('filter-max-price').value) || 99999;
+            
+            try {
+                // Using POST for /filterbyprice as required by backend
+                const res = await fetch(`${baseUrl}/filterbyprice`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ min_price: min, max_price: max })
+                });
+                const items = await res.json();
+                renderItemGrid(items, 'marketplace-grid');
+                showToast("Applied price filters.", "info");
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function renderItemGrid(items, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = items.map(i => `
+                <div class="glass p-5 rounded-3xl space-y-4 group border border-transparent hover:border-emerald-500/50 transition-all flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">Product #${i.product_id}</span>
+                            <span class="text-xs text-amber-400 font-bold bg-amber-500/10 px-2 py-1 rounded-lg">-30%</span>
+                        </div>
+                        <p class="text-[10px] text-white/40 italic flex items-center gap-1 mt-2">
+                            <i data-lucide="clock" class="w-3 h-3"></i> Exp: ${new Date(i.expiry_date).toLocaleDateString()}
+                        </p>
+                    </div>
+                    
+                    <div class="flex items-end justify-between mt-4">
+                        <div>
+                            <p class="text-[10px] text-white/40 line-through">$${(i.original_price || 0).toFixed(2)}</p>
+                            <p class="text-2xl font-bold text-white">$${(i.current_price || 0).toFixed(2)}</p>
+                        </div>
+                        <p class="text-xs text-white/50 bg-white/5 px-2 py-1 rounded-lg border border-white/10">Qty: ${i.quantity}</p>
+                    </div>
+                    
+                    <button onclick="initPurchase(${i.item_id}, ${i.current_price}, ${i.quantity})" class="w-full mt-4 py-3 rounded-xl border border-emerald-500/30 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-forest-green font-bold transition-all flex items-center justify-center gap-2 text-sm">
+                        <i data-lucide="shopping-cart" class="w-4 h-4"></i> Reserve
+                    </button>
+                </div>
+            `).join('') || `<div class="col-span-full py-12 text-center text-white/30 italic">No sustainable options currently match this criteria.</div>`;
+            lucide.createIcons();
+        }
+
+        function initPurchase(itemId, price, maxQty) {
+            document.getElementById('modal-item-id-display').innerText = `#${itemId}`;
+            document.getElementById('modal-unit-price-display').innerText = `$${price.toFixed(2)}`;
+            document.getElementById('modal-item-id').value = itemId;
+            document.getElementById('modal-item-price').value = price;
+            document.getElementById('modal-item-max-qty').value = maxQty;
+            
+            const qtyInput = document.getElementById('modal-purchase-qty');
+            qtyInput.value = 1;
+            qtyInput.max = maxQty;
+
+            // Reset to step 1
+            goToStep(1);
+            openModal('purchaseModal');
+            updateModalTotal();
+            lucide.createIcons();
+        }
+
+        function goToStep(step) {
+            // Hide all steps
+            document.getElementById('checkout-step-1').classList.add('hidden');
+            document.getElementById('checkout-step-2').classList.add('hidden');
+            document.getElementById('checkout-step-3').classList.add('hidden');
+
+            // Reset step dots
+            document.getElementById('step-dot-1').className = 'w-3 h-3 rounded-full bg-white/20 transition-all';
+            document.getElementById('step-dot-2').className = 'w-3 h-3 rounded-full bg-white/20 transition-all';
+            document.getElementById('step-dot-3').className = 'w-3 h-3 rounded-full bg-white/20 transition-all';
+
+            // Show target step and highlight dot
+            document.getElementById(`checkout-step-${step}`).classList.remove('hidden');
+            document.getElementById(`step-dot-${step}`).className = 'w-3 h-3 rounded-full bg-emerald-400 transition-all';
+
+            // Mark completed steps
+            for (let i = 1; i < step; i++) {
+                document.getElementById(`step-dot-${i}`).className = 'w-3 h-3 rounded-full bg-emerald-400/50 transition-all';
+            }
+
+            // Update title
+            const titles = { 1: 'Secure Checkout', 2: 'Delivery Details', 3: 'Order Confirmed' };
+            document.getElementById('checkout-title').innerText = titles[step];
+
+            lucide.createIcons();
+        }
+
+        function updateModalTotal() {
+            const price = parseFloat(document.getElementById('modal-item-price').value);
+            const qty = parseInt(document.getElementById('modal-purchase-qty').value) || 1;
+            const total = price * qty;
+            document.getElementById('modal-item-price-display').innerText = `$${total.toFixed(2)}`;
+        }
+
+        async function confirmPurchase() {
+            // Validate delivery fields
+            const deliveryName = document.getElementById('delivery-name').value.trim();
+            const deliveryPhone = document.getElementById('delivery-phone').value.trim();
+            const deliveryAddress = document.getElementById('delivery-address').value.trim();
+
+            if (!deliveryName || !deliveryPhone || !deliveryAddress) {
+                return showToast("All delivery fields are required.", "warning");
+            }
+
+            const itemId = document.getElementById('modal-item-id').value;
+            const price = parseFloat(document.getElementById('modal-item-price').value);
+            const qty = parseInt(document.getElementById('modal-purchase-qty').value) || 1;
+            const totalAmount = price * qty;
+
+            // Disable button to prevent double-click
+            const btn = document.getElementById('btn-confirm-order');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader" class="w-5 h-5 animate-spin"></i> Processing...';
+            lucide.createIcons();
+
+            try {
+                const res = await fetch(`${baseUrl}/placeorder`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        buyer_id: customerId,
+                        item_id: itemId,
+                        order_type: 'purchase',
+                        quantity_ordered: qty,
+                        total_amount: totalAmount,
+                        delivery_name: deliveryName,
+                        delivery_phone: deliveryPhone,
+                        delivery_address: deliveryAddress
+                    })
+                });
+
+                if (res.ok) {
+                    const orderData = await res.json();
+                    // Populate confirmation screen
+                    document.getElementById('confirmed-total').innerText = `$${totalAmount.toFixed(2)}`;
+                    document.getElementById('confirmed-item').innerText = `#${itemId}`;
+                    document.getElementById('confirmed-qty').innerText = qty;
+                    document.getElementById('confirmed-name').innerText = deliveryName;
+                    document.getElementById('confirmed-points').innerText = `+${orderData.pointsEarned || 0}`;
+
+                    goToStep(3);
+                    showToast("Order confirmed! Thank you for rescuing food.", "success");
+                } else {
+                    const errData = await res.json();
+                    showToast(errData.error || "Transaction failed.", "error");
+                }
+            } catch(e) {
+                console.error(e);
+                showToast("Network failure during transaction.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="shield-check" class="w-5 h-5"></i> Confirm Order';
+                lucide.createIcons();
+            }
+        }
+
+        function closeCheckout() {
+            closeModal('purchaseModal');
+            // Reset delivery form
+            document.getElementById('delivery-name').value = '';
+            document.getElementById('delivery-phone').value = '';
+            document.getElementById('delivery-address').value = '';
+            // Refresh data to show updated quantities
+            refreshData();
+        }
+
+        async function loadReservations() {
+            try {
+                // Using POST for /orderhistory
+                const res = await fetch(`${baseUrl}/orderhistory`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ buyer_id: customerId })
+                });
+                const history = await res.json();
+
+                const tbody = document.getElementById('history-table-body');
+                tbody.innerHTML = history.map(h => `
+                    <tr class="hover:bg-white/5 transition-all">
+                        <td class="py-5 px-4 font-mono text-emerald-400">#${h.order_id}</td>
+                        <td class="py-5 px-4 text-white/70">${new Date(h.order_date).toLocaleDateString()}</td>
+                        <td class="py-5 px-4">ITEM-${h.item_id}</td>
+                        <td class="py-5 px-4">${h.quantity_ordered}</td>
+                        <td class="py-5 px-4 font-bold text-amber-400">$${(h.total_amount || 0).toFixed(2)}</td>
+                        <td class="py-5 px-4 text-right">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                Confirmed
+                            </span>
+                        </td>
+                    </tr>
+                `).join('') || `<tr><td colspan="6" class="py-12 text-center text-white/30 italic">No past reservations found. Start rescuing today!</td></tr>`;
+                
+            } catch(e) {
+                console.error(e);
+                showToast("Failed to retrieve history log.", "error");
+            }
+        }
+
+        // Account Settings Actions
+        async function updatePhone() {
+            const phone = document.getElementById('settings-phone').value;
+            const res = await fetch(`${baseUrl}/updatephone`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: customerId, phone_number: phone })
+            });
+            if (res.ok) showToast("Phone communication linked successfully.", "success");
+        }
+        async function updateEmail() {
+            const email = document.getElementById('settings-email').value;
+            const res = await fetch(`${baseUrl}/updateemail`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: customerId, email: email })
+            });
+            if (res.ok) showToast("Primary email updated.", "success");
+        }
+        async function updatePassword() {
+            const pass = document.getElementById('settings-password').value;
+            if(!pass) return showToast("Passcode cannot be empty.", "warning");
+            const res = await fetch(`${baseUrl}/updatepassword`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: customerId, password_hash: pass })
+            });
+            if (res.ok) {
+                showToast("Security credentials successfully rotated.", "success");
+                document.getElementById('settings-password').value = '';
+            }
+        }
+
+        // Utility
+        function showToast(msg, type = "info") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                'success': 'bg-emerald-500 text-forest-green',
+                'error': 'bg-red-500 text-white',
+                'warning': 'bg-amber-500 text-forest-green',
+                'info': 'bg-blue-500 text-white'
+            };
+            toast.className = `${colors[type]} px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-bold animate-in slide-in-from-right-full duration-300`;
+            toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-5 h-5"></i><span>${msg}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => {
+                toast.classList.add('animate-out', 'fade-out', 'slide-out-to-right-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // Start
+        refreshData();
+    </script>
 </body>
 </html>
