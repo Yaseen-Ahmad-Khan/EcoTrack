@@ -1,4 +1,4 @@
-﻿﻿create database ecotrack
+create database ecotrack
 use ecotrack
 
 go
@@ -59,7 +59,7 @@ create table orders (
     total_amount decimal(10, 2) default 0.00 check (total_amount >= 0),
     order_date datetime default getdate(),
     foreign key (buyer_id) references users(user_id) on delete no action,
-    foreign key (item_id) references inventory(item_id) on delete no action
+    foreign key (item_id) references inventory(item_id) on delete cascade
 );
 
 --  claims table
@@ -68,8 +68,9 @@ create table claims (
     item_id int not null,
     ngo_id int not null,
     claim_status varchar(20) default 'pending' check (claim_status in ('pending', 'approved', 'collected', 'cancelled')),
+    quantity_claimed int default 1 check (quantity_claimed > 0),
     claim_date datetime default getdate(),
-    foreign key (item_id) references inventory(item_id) on delete no action,
+    foreign key (item_id) references inventory(item_id) on delete cascade,
     foreign key (ngo_id) references users(user_id) on delete no action
 );
 --  reviews table
