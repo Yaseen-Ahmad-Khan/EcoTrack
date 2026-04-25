@@ -310,9 +310,11 @@
                             <table class="w-full text-left text-sm">
                                 <thead>
                                     <tr class="text-white/40 border-b border-white/10 uppercase tracking-widest text-[10px] font-bold">
-                                        <th class="pb-3">Item ID</th>
+                                        <th class="pb-3">Product Name</th>
+                                        <th class="pb-3">Qty</th>
                                         <th class="pb-3">Expiry Date</th>
                                         <th class="pb-3 text-right">Phase</th>
+                                        <th class="pb-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="expiry-report-table" class="divide-y divide-white/5">
@@ -465,9 +467,19 @@
                         <input type="number" step="0.01" id="modal-curr-price" required class="w-full glass rounded-xl px-4 py-3 text-sm">
                     </div>
                 </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Unit Expiry Date</label>
-                    <input type="date" id="modal-expiry" required class="w-full glass rounded-xl px-4 py-3 text-sm">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Unit Expiry Date</label>
+                        <input type="date" id="modal-expiry" required class="w-full glass rounded-xl px-4 py-3 text-sm">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Initial Status</label>
+                        <select id="modal-status" class="w-full glass rounded-xl px-4 py-3 text-sm">
+                            <option value="available">Available (Full Price)</option>
+                            <option value="discounted">Discounted</option>
+                            <option value="donated">Donation Pool</option>
+                        </select>
+                    </div>
                 </div>
                 <button type="submit" class="w-full btn-primary py-4 rounded-xl font-bold mt-4">Broadcast to Marketplace</button>
             </form>
@@ -542,6 +554,45 @@
             }
         }
 
+        async function approveClaim(claimId, itemId, quantity) {
+            try {
+                const res = await fetch(`${baseUrl}/claims/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ claim_id: claimId, item_id: itemId, quantity_claimed: quantity })
+                });
+                
+                if (res.ok) {
+                    showToast("Dispatch logistics synchronized. Driver on route.", "success");
+                    loadClaims();
+                    refreshData();
+                } else {
+                    showToast("Failed to approve claim.", "error");
+                }
+            } catch (err) {
+                showToast("System error during approval.", "error");
+            }
+        }
+
+        async function deleteItem(itemId) {
+            if (!confirm("Are you sure you want to remove this item from inventory?")) return;
+            
+            try {
+                const res = await fetch(`${baseUrl}/inventory/${itemId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (res.ok) {
+                    showToast("Item successfully removed from matrix.", "success");
+                    refreshData();
+                } else {
+                    showToast("Failed to remove item.", "error");
+                }
+            } catch (err) {
+                showToast("System error during removal.", "error");
+            }
+        }
+
         async function loadOverview() {
             const [totalRes, revRes, co2Res, wasteRes, trendRes, summaryRes] = await Promise.all([
                 fetch(`${baseUrl}/inventory/total/${vendorId}`),
@@ -599,7 +650,8 @@
                 const isNear = new Date(i.expiry_date) < new Date(Date.now() + 2*24*60*60*1000);
                 return `
                     <tr class="hover:bg-white/5 transition-all">
-                        <td class="py-4 px-2 font-mono text-emerald-400">#${i.item_id}</td>
+                        <td class="py-4 px-2 font-medium text-white">${i.product_name || 'Unknown'}</td>
+                        <td class="py-4 px-2 text-white/60 font-mono">${i.quantity}</td>
                         <td class="py-4 px-2 ${isNear ? 'text-amber-500 font-bold' : 'text-white/60'}">${new Date(i.expiry_date).toLocaleDateString()}</td>
                         <td class="py-4 px-2 text-right">
                             <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase 
@@ -607,9 +659,14 @@
                                 ${i.status}
                             </span>
                         </td>
+                        <td class="py-4 px-2 text-right">
+                            <button onclick="deleteItem(${i.item_id})" class="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
                     </tr>
                 `;
-            }).join('') || '<tr><td colspan="3" class="py-8 text-center text-white/30 italic">Clear horizon. No items tracked.</td></tr>';
+            }).join('') || '<tr><td colspan="5" class="py-8 text-center text-white/30 italic">Clear horizon. No items tracked.</td></tr>';
         }
 
         async function loadPricing() {
@@ -660,7 +717,7 @@
                         </span>
                     </td>
                     <td class="py-5 px-4 text-right">
-                        <button onclick="showToast('Dispatch logistics synchronized. Driver on route.', 'success')" class="px-4 py-1.5 rounded-lg bg-emerald-500 text-forest-green text-[10px] font-bold uppercase">Authorize Release</button>
+                        <button onclick="approveClaim(${c.claim_id}, ${c.item_id}, ${c.quantity_claimed || 1})" class="px-4 py-1.5 rounded-lg bg-emerald-500 text-forest-green text-[10px] font-bold uppercase">Authorize Release</button>
                     </td>
                 </tr>
             `).join('') || '<tr><td colspan="5" class="py-12 text-center text-white/20 italic">No pending pickup requests.</td></tr>';
@@ -699,7 +756,8 @@
                 quantity: document.getElementById('modal-quantity').value,
                 original_price: document.getElementById('modal-orig-price').value,
                 current_price: document.getElementById('modal-curr-price').value,
-                expiry_date: document.getElementById('modal-expiry').value
+                expiry_date: document.getElementById('modal-expiry').value,
+                status: document.getElementById('modal-status').value
             };
 
             const res = await fetch(`${baseUrl}/addstock`, {

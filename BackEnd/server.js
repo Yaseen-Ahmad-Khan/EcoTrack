@@ -28,7 +28,7 @@ app.listen(5000, () => {
     console.log("Server Running on port 5000");
 });
 const config = {
-    server: 'DESKTOP-LTPKS4P\\SQLEXPRESS',
+    server: 'DESKTOP-L6BTPFI\\SQLEXPRESS',
     database: 'ecotrack',
     driver: 'ODBC Driver 18 for SQL Server',
     options: {
@@ -76,7 +76,7 @@ app.get('/profile/:id', async (req, res) => {
 
         res.json(result.recordset);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -405,17 +405,24 @@ app.get('/outofstock', async (req, res) => {
 });
 
 app.post('/addstock', async (req, res) => {
-    await sql.connect(config);
-    const { product_id, vendor_id, quantity, original_price, current_price, expiry_date } = req.body;
+    try {
+        await sql.connect(config);
+        const { product_id, vendor_id, quantity, original_price, current_price, expiry_date, status } = req.body;
 
-    await sql.query`
-        INSERT INTO inventory 
-        (product_id, vendor_id, quantity, original_price, current_price, expiry_date)
-        VALUES
-        (${product_id}, ${vendor_id}, ${quantity}, ${original_price}, ${current_price}, ${expiry_date})
-    `;
+        await sql.query`
+            INSERT INTO inventory 
+            (product_id, vendor_id, quantity, original_price, current_price, expiry_date, status)
+            VALUES
+            (${product_id}, ${vendor_id}, ${quantity}, ${original_price}, ${current_price}, ${expiry_date}, ${status || 'available'})
+        `;
 
-    res.send("Stock added successfully");
+        // Automatically trigger logic to apply discounts/donations immediately
+        await runAutoLogic();
+
+        res.status(201).json({ message: "Stock added successfully and maintenance logic applied." });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.post('/lowstock', async (req, res) => {
@@ -433,17 +440,47 @@ app.post('/lowstock', async (req, res) => {
 });
 
 app.post('/expiryreport', async (req, res) => {
-    await sql.connect(config);
-    const { vendor_id } = req.body;
+    try {
+        await sql.connect(config);
+        const { vendor_id } = req.body;
 
-    const result = await sql.query`
-        SELECT *
-        FROM inventory
-        WHERE vendor_id = ${vendor_id}
-        ORDER BY expiry_date ASC
-    `;
+        const result = await sql.query`
+            SELECT i.*, p.product_name
+            FROM inventory i
+            LEFT JOIN products p ON i.product_id = p.product_id
+            WHERE i.vendor_id = ${vendor_id}
+            ORDER BY i.expiry_date ASC
+        `;
 
-    res.json(result.recordset);
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/claims/approve', async (req, res) => {
+    try {
+        await sql.connect(config);
+        const { claim_id, item_id, quantity_claimed } = req.body;
+
+        // 1. Update claim status
+        await sql.query`
+            UPDATE claims 
+            SET claim_status = 'approved' 
+            WHERE claim_id = ${claim_id}
+        `;
+
+        // 2. Deduct from inventory
+        await sql.query`
+            UPDATE inventory 
+            SET quantity = quantity - ${quantity_claimed}, last_updated = GETDATE()
+            WHERE item_id = ${item_id}
+        `;
+
+        res.json({ message: "Claim approved and inventory updated." });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.post('/updateprice', async (req, res) => {
@@ -478,41 +515,34 @@ const runAutoLogic = async () => {
     try {
         await sql.connect(config);
 
-        // 1. Auto Discount (30% off if expiring within 2 days)
-        await sql.query(`
-            UPDATE inventory 
-            SET status = 'discounted', current_price = original_price * 0.7 
-            WHERE expiry_date <= DATEADD(day, 2, GETDATE()) AND status = 'available'
-        `);
-
-        // 2. Auto Donate (If expiring within 12 hours)
-        await sql.query(`
+        // 1. Auto Donate (If expiring within 10 days) - Flag as 'donated'
+        await sql.query`
             UPDATE inventory 
             SET status = 'donated' 
-            WHERE expiry_date <= DATEADD(hour, 12, GETDATE()) 
-            AND (status = 'available' OR status = 'discounted')
-        `);
+            WHERE expiry_date <= DATEADD(day, 10, GETDATE()) 
+            AND status != 'donated' AND status != 'expired'
+        `;
 
-        // 3. Mark Expired
-        await sql.query(`
+        // 2. Auto Discount (30% off if expiring within 15 days - just as a buffer before donation)
+        await sql.query`
             UPDATE inventory 
-            SET status = 'expired' 
+            SET status = 'discounted', current_price = original_price * 0.7 
+            WHERE expiry_date <= DATEADD(day, 15, GETDATE()) 
+            AND status = 'available'
+        `;
+
+        // 3. Auto Delete Expired Items
+        // Note: This might fail if there are active claims/orders due to FK constraints.
+        // We attempt to delete items where expiry_date is in the past.
+        await sql.query`
+            DELETE FROM inventory 
             WHERE expiry_date < GETDATE()
-        `);
+        `;
 
-        // 4. Category Discount (50% off for Category 1)
-        await sql.query(`
-            UPDATE inventory 
-            SET current_price = original_price * 0.5 
-            FROM inventory 
-            JOIN products ON inventory.product_id = products.product_id 
-            WHERE products.category_id = 1
-        `);
-
-        console.log("Inventory logic executed successfully.");
+        console.log("Inventory maintenance logic (Donation & Purge) executed successfully.");
     } catch (err) {
-        console.error("Database error:", err);
-        throw err;
+        console.error("Maintenance logic error:", err);
+        // We don't throw here to prevent crashing the server on automated tasks
     }
 };
 
@@ -532,7 +562,7 @@ app.get('/donations/available', async (req, res) => {
         const result = await sql.query("SELECT * FROM inventory WHERE status = 'donated' AND quantity > 0");
         res.json(result.recordset);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -546,9 +576,9 @@ app.post('/claims/create', async (req, res) => {
             VALUES (${item_id}, ${ngo_id}, 'pending', ${quantity || 1})
         `;
 
-        res.status(201).send({ message: "Claim submitted successfully" });
+        res.status(201).json({ message: "Claim submitted successfully" });
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: "Claim submission failed: " + err.message });
     }
 });
 
@@ -564,7 +594,7 @@ app.get('/claims/history/:ngo_id', async (req, res) => {
 
         res.json(result.recordset);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -581,7 +611,7 @@ app.get('/claims/pending/:vendor_id', async (req, res) => {
 
         res.json(result.recordset);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -591,7 +621,23 @@ app.get('/logistics/active', async (req, res) => {
         const result = await sql.query("SELECT * FROM logistics WHERE delivery_status = 'in-transit'");
         res.json(result.recordset);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/inventory/:item_id', async (req, res) => {
+    try {
+        await sql.connect(config);
+        const { item_id } = req.params;
+
+        await sql.query`
+            DELETE FROM inventory 
+            WHERE item_id = ${item_id}
+        `;
+
+        res.json({ message: "Item removed from inventory successfully." });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to remove item: " + err.message });
     }
 });
 
@@ -607,7 +653,7 @@ app.get('/notifications/unread/:user_id', async (req, res) => {
 
         res.json(result.recordset);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
