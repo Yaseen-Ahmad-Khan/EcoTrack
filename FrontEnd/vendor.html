@@ -48,6 +48,10 @@
             color: white !important;
             border-radius: 12px !important;
         }
+        select option {
+            background-color: var(--forest-green);
+            color: white;
+        }
         .btn-primary {
             background: linear-gradient(135deg, #10b981 0%, #064e3b 100%);
             box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
@@ -667,6 +671,7 @@
                     </tr>
                 `;
             }).join('') || '<tr><td colspan="5" class="py-8 text-center text-white/30 italic">Clear horizon. No items tracked.</td></tr>';
+            lucide.createIcons();
         }
 
         async function loadPricing() {

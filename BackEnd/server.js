@@ -28,7 +28,7 @@ app.listen(5000, () => {
     console.log("Server Running on port 5000");
 });
 const config = {
-    server: 'DESKTOP-L6BTPFI\\SQLEXPRESS',
+    server: 'PC',
     database: 'ecotrack',
     driver: 'ODBC Driver 18 for SQL Server',
     options: {
@@ -305,7 +305,7 @@ app.post('/placeorder', async (req, res) => {
 
         // Increment user's loyalty points (10 points per item rescued)
         const pointsToAdd = quantity_ordered * 10;
-        
+
         // Check if loyalty record exists
         const loyaltyCheck = await sql.query`
             SELECT reward_id FROM loyalty_points WHERE user_id = ${buyer_id}
@@ -630,12 +630,20 @@ app.delete('/inventory/:item_id', async (req, res) => {
         await sql.connect(config);
         const { item_id } = req.params;
 
+        // 1. Remove related claims first
+        await sql.query`DELETE FROM claims WHERE item_id = ${item_id}`;
+
+        // 2. Remove related orders (logistics and payments will cascade delete if configured, 
+        // but we'll do it manually if needed. According to schema, orders.order_id is referenced by others with cascade)
+        await sql.query`DELETE FROM orders WHERE item_id = ${item_id}`;
+
+        // 3. Now remove the item from inventory
         await sql.query`
             DELETE FROM inventory 
             WHERE item_id = ${item_id}
         `;
 
-        res.json({ message: "Item removed from inventory successfully." });
+        res.json({ message: "Item and related records removed successfully." });
     } catch (err) {
         res.status(500).json({ error: "Failed to remove item: " + err.message });
     }
@@ -667,5 +675,129 @@ app.get('/logistics/stats/success-rate', async (req, res) => {
         res.json({ success_rate: result.recordset[0].success_rate });
     } catch (err) {
         res.status(500).send(err.message);
+    }
+});
+
+app.get('/displaydiscounted/full', async (req, res) => {
+    try {
+        await sql.connect(config);
+        const result = await sql.query(`
+            SELECT i.*, p.product_name 
+            FROM inventory i
+            JOIN products p ON i.product_id = p.product_id
+            WHERE i.status = 'discounted' AND i.quantity > 0
+        `);
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+app.post('/orderhistory/full', async (req, res) => {
+    try {
+        await sql.connect(config);
+        const { buyer_id } = req.body;
+
+        const result = await sql.query`
+            SELECT 
+                o.order_id, 
+                o.order_date, 
+                o.item_id,
+                o.quantity_ordered, 
+                o.total_amount, 
+                p.product_name,
+                pay.payment_status,
+                pay.payment_method,
+                l.delivery_status
+            FROM orders o
+            LEFT JOIN inventory i ON o.item_id = i.item_id
+            LEFT JOIN products p ON i.product_id = p.product_id
+            LEFT JOIN payments pay ON o.order_id = pay.order_id
+            LEFT JOIN logistics l ON o.order_id = l.order_id
+            WHERE o.buyer_id = ${buyer_id}
+            ORDER BY o.order_date DESC
+        `;
+
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/placeorder/full', async (req, res) => {
+    try {
+        await sql.connect(config);
+        const {
+            buyer_id, item_id, quantity_ordered, total_amount,
+            delivery_name, delivery_address, payment_method, points_used
+        } = req.body;
+
+        // 1. Check if enough stock exists
+        const stockCheck = await sql.query`
+            SELECT quantity FROM inventory WHERE item_id = ${item_id}
+        `;
+        if (stockCheck.recordset.length === 0) {
+            return res.status(404).json({ error: "Item not found in inventory." });
+        }
+        if (stockCheck.recordset[0].quantity < quantity_ordered) {
+            return res.status(400).json({ error: "Insufficient stock available." });
+        }
+
+        // 2. Insert into orders and instantly capture the new order_id using OUTPUT
+        const orderResult = await sql.query`
+            INSERT INTO orders (buyer_id, item_id, order_type, quantity_ordered, total_amount)
+            OUTPUT INSERTED.order_id
+            VALUES (${buyer_id}, ${item_id}, 'purchase', ${quantity_ordered}, ${total_amount})
+        `;
+        const new_order_id = orderResult.recordset[0].order_id;
+
+        // 3. Insert into payments table (Card is completed immediately, Cash is pending)
+        const payStatus = payment_method === 'card' ? 'completed' : 'pending';
+        await sql.query`
+            INSERT INTO payments (order_id, payment_method, payment_status, amount_paid)
+            VALUES (${new_order_id}, ${payment_method}, ${payStatus}, ${total_amount})
+        `;
+
+        // 4. Insert into logistics table for tracking
+        await sql.query`
+            INSERT INTO logistics (order_id, delivery_status, delivery_person_name, estimated_arrival)
+            VALUES (${new_order_id}, 'pending', 'Unassigned', DATEADD(hour, 2, GETDATE()))
+        `;
+
+        // 5. Deduct quantity from inventory
+        await sql.query`
+            UPDATE inventory 
+            SET quantity = quantity - ${quantity_ordered}, last_updated = GETDATE()
+            WHERE item_id = ${item_id}
+        `;
+
+        // 6. Handle Loyalty Points (Grant 10 per item, deduct if they spent points)
+        const pointsEarned = quantity_ordered * 10;
+        const loyaltyCheck = await sql.query`
+            SELECT points_earned FROM loyalty_points WHERE user_id = ${buyer_id}
+        `;
+
+        if (loyaltyCheck.recordset.length > 0) {
+            await sql.query`
+                UPDATE loyalty_points 
+                SET points_earned = points_earned + ${pointsEarned} - ${points_used || 0}, last_updated = GETDATE()
+                WHERE user_id = ${buyer_id}
+            `;
+        } else {
+            await sql.query`
+                INSERT INTO loyalty_points (user_id, points_earned, last_updated)
+                VALUES (${buyer_id}, ${pointsEarned}, GETDATE())
+            `;
+        }
+
+        res.status(201).json({
+            message: "Order fully processed",
+            order_id: new_order_id,
+            pointsEarned: pointsEarned
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: "Checkout transaction failed: " + err.message });
     }
 });

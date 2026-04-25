@@ -40,11 +40,15 @@
             color: var(--soft-amber);
         }
         .sidebar-item:hover:not(.active) { transform: translateX(5px); color: #10b981; }
-        input, select {
+        input, select, textarea {
             background: rgba(255, 255, 255, 0.05) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
             color: white !important;
             border-radius: 12px !important;
+        }
+        select option {
+            background-color: var(--forest-green);
+            color: white;
         }
         .btn-primary {
             background: linear-gradient(135deg, #10b981 0%, #064e3b 100%);
@@ -56,42 +60,26 @@
         @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-30px) rotate(10deg); } }
         .stat-card:hover { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.4); transform: translateY(-5px); }
         .hide-scroll::-webkit-scrollbar { display: none; }
+        
+        /* Custom radio styling for payment */
+        .payment-radio:checked + label {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
     </style>
 </head>
 <body class="flex overflow-hidden relative">
 
     <!-- Decorative Floating Icons & Particles -->
     <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <!-- Floating Nature & Food Icons -->
         <i data-lucide="leaf" class="float-icon absolute top-[10%] left-[5%] text-emerald-500/20 w-12 h-12" style="animation-delay: 0s;"></i>
         <i data-lucide="sprout" class="float-icon absolute top-[70%] left-[80%] text-emerald-500/10 w-20 h-20" style="animation-delay: 2s;"></i>
         <i data-lucide="flower-2" class="float-icon absolute top-[40%] left-[90%] text-emerald-500/15 w-16 h-16" style="animation-delay: 4s;"></i>
         <i data-lucide="wind" class="float-icon absolute top-[20%] left-[70%] text-emerald-500/10 w-24 h-24" style="animation-delay: 1s;"></i>
         <i data-lucide="apple" class="float-icon absolute top-[15%] left-[25%] text-red-500/10 w-14 h-14" style="animation-delay: 3s;"></i>
         <i data-lucide="cookie" class="float-icon absolute top-[80%] left-[15%] text-amber-600/10 w-12 h-12" style="animation-delay: 5s;"></i>
-        <i data-lucide="pizza" class="float-icon absolute top-[50%] left-[35%] text-amber-400/10 w-20 h-20" style="animation-delay: 2.5s;"></i>
-        <i data-lucide="beef" class="float-icon absolute top-[30%] left-[60%] text-red-400/10 w-16 h-16" style="animation-delay: 6s;"></i>
         <i data-lucide="carrot" class="float-icon absolute top-[90%] left-[50%] text-orange-400/10 w-14 h-14" style="animation-delay: 1.5s;"></i>
-        <i data-lucide="sandwich" class="float-icon absolute top-[10%] left-[85%] text-emerald-400/10 w-12 h-12" style="animation-delay: 7s;"></i>
-        <i data-lucide="cake" class="float-icon absolute top-[60%] left-[25%] text-pink-400/10 w-18 h-18" style="animation-delay: 4.5s;"></i>
-        <i data-lucide="fish" class="float-icon absolute top-[45%] left-[10%] text-blue-400/10 w-14 h-14" style="animation-delay: 8s;"></i>
-        <i data-lucide="citrus" class="float-icon absolute top-[75%] left-[45%] text-yellow-400/10 w-12 h-12" style="animation-delay: 2.2s;"></i>
-        <i data-lucide="egg" class="float-icon absolute top-[25%] left-[95%] text-white/10 w-10 h-10" style="animation-delay: 3.5s;"></i>
-        <i data-lucide="grape" class="float-icon absolute top-[5%] left-[55%] text-purple-400/10 w-16 h-16" style="animation-delay: 9s;"></i>
-        <i data-lucide="croissant" class="float-icon absolute top-[85%] left-[70%] text-amber-300/10 w-16 h-16" style="animation-delay: 5.5s;"></i>
-        <i data-lucide="banana" class="float-icon absolute top-[35%] left-[15%] text-yellow-300/10 w-14 h-14" style="animation-delay: 10s;"></i>
-        <i data-lucide="soup" class="float-icon absolute top-[65%] left-[90%] text-orange-300/10 w-14 h-14" style="animation-delay: 4.8s;"></i>
-
-        <!-- More Nature -->
         <i data-lucide="tree-pine" class="float-icon absolute top-[60%] left-[5%] text-emerald-600/10 w-32 h-32" style="animation-delay: 1.5s; animation-duration: 12s;"></i>
-        <i data-lucide="shrub" class="float-icon absolute top-[80%] left-[85%] text-emerald-700/10 w-24 h-24" style="animation-delay: 6.5s; animation-duration: 15s;"></i>
-        <i data-lucide="flower" class="float-icon absolute top-[10%] left-[45%] text-emerald-400/15 w-10 h-10" style="animation-delay: 2.8s;"></i>
-        
-        <!-- Glowing Particles -->
-        <div class="absolute top-[30%] left-[20%] w-2 h-2 bg-emerald-400 rounded-full blur-[2px] animate-pulse" style="animation-duration: 3s;"></div>
-        <div class="absolute top-[50%] left-[60%] w-3 h-3 bg-emerald-500 rounded-full blur-[3px] animate-pulse" style="animation-duration: 4s;"></div>
-        <div class="absolute top-[80%] left-[30%] w-2 h-2 bg-soft-amber rounded-full blur-[2px] animate-pulse" style="animation-duration: 5s;"></div>
-        <div class="absolute top-[10%] left-[80%] w-1.5 h-1.5 bg-emerald-300 rounded-full blur-[1px] animate-pulse" style="animation-duration: 2.5s;"></div>
     </div>
 
     <!-- Sidebar -->
@@ -195,7 +183,6 @@
                         Featured Nearing Expiry (30% Off)
                     </h3>
                     <div id="featured-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Populated by JS -->
                         <div class="col-span-full py-8 text-center text-white/40 italic">Scanning local network for deals...</div>
                     </div>
                 </div>
@@ -206,7 +193,7 @@
                 <div class="glass p-6 rounded-3xl flex flex-col md:flex-row gap-4 justify-between items-center">
                     <div class="flex gap-4 w-full md:w-auto">
                         <div class="relative flex-1 md:w-64">
-                            <input type="text" id="filter-category" placeholder="Category (e.g. Produce)" class="w-full pl-10 pr-4 py-3 glass rounded-2xl text-sm">
+                            <input type="text" id="filter-category" placeholder="Category (e.g. Bakery)" class="w-full pl-10 pr-4 py-3 glass rounded-2xl text-sm">
                             <i data-lucide="search" class="absolute left-3 top-3.5 w-4 h-4 text-white/40"></i>
                         </div>
                         <button onclick="applyCategoryFilter()" class="glass px-6 py-3 rounded-2xl hover:border-emerald-500 transition-all font-medium text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
@@ -227,9 +214,7 @@
                     </div>
                 </div>
 
-                <div id="marketplace-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    <!-- Populated by JS -->
-                </div>
+                <div id="marketplace-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
             </div>
 
             <!-- RESERVATIONS SECTION -->
@@ -245,15 +230,14 @@
                                 <tr class="text-white/40 border-b border-white/10 uppercase tracking-widest text-[10px] font-bold">
                                     <th class="pb-4 px-4">Order ID</th>
                                     <th class="pb-4 px-4">Date</th>
-                                    <th class="pb-4 px-4">Item ID</th>
+                                    <th class="pb-4 px-4">Product</th>
                                     <th class="pb-4 px-4">Qty</th>
-                                    <th class="pb-4 px-4">Total Amount</th>
-                                    <th class="pb-4 px-4 text-right">Status</th>
+                                    <th class="pb-4 px-4">Total</th>
+                                    <th class="pb-4 px-4">Payment</th>
+                                    <th class="pb-4 px-4 text-right">Delivery</th>
                                 </tr>
                             </thead>
-                            <tbody id="history-table-body" class="divide-y divide-white/5">
-                                <!-- Dynamic claims -->
-                            </tbody>
+                            <tbody id="history-table-body" class="divide-y divide-white/5"></tbody>
                         </table>
                     </div>
                 </div>
@@ -300,7 +284,7 @@
         </div>
     </main>
 
-    <!-- Checkout Modal (Multi-Step) -->
+    <!-- Checkout Modal (Multi-Step Upgrade) -->
     <div id="purchaseModal" class="fixed inset-0 bg-forest-green/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 overflow-y-auto">
         <div class="glass w-full max-w-md rounded-3xl p-8 border-white/20 animate-in zoom-in-95 duration-300 my-8">
             <div class="flex justify-between items-center mb-6">
@@ -317,28 +301,48 @@
                 <div id="step-dot-3" class="w-3 h-3 rounded-full bg-white/20 transition-all"></div>
             </div>
 
-            <!-- STEP 1: Order Summary -->
+            <!-- STEP 1: Order Summary & Payment -->
             <div id="checkout-step-1" class="space-y-4">
                 <div class="p-4 bg-white/5 rounded-xl border border-white/10">
-                    <p class="text-xs text-white/50 uppercase tracking-widest font-bold mb-1">Item Reference</p>
-                    <p class="font-mono text-lg" id="modal-item-id-display">#---</p>
+                    <p class="text-xs text-white/50 uppercase tracking-widest font-bold mb-1">Rescuing</p>
+                    <p class="font-bold text-lg text-emerald-400" id="modal-item-name-display">Product Name</p>
                 </div>
-                <div class="p-4 bg-white/5 rounded-xl border border-white/10">
-                    <p class="text-xs text-white/50 uppercase tracking-widest font-bold mb-1">Unit Price</p>
-                    <p class="text-lg font-bold" id="modal-unit-price-display">$0.00</p>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Quantity</label>
+                        <input type="number" id="modal-purchase-qty" value="1" min="1" class="w-full glass rounded-xl px-4 py-3 text-sm" oninput="updateModalTotal()">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Payment Method</label>
+                        <select id="modal-payment-method" class="w-full glass rounded-xl px-4 py-3 text-sm">
+                            <option value="cash">Cash</option>
+                            <option value="card">Card</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Loyalty Points Checkbox -->
+                <div class="p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/20 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="award" class="text-emerald-400 w-5 h-5"></i>
+                        <div>
+                            <p class="text-xs font-bold">Apply Loyalty Points</p>
+                            <p class="text-[10px] text-white/40">Redeem for 10% instant discount</p>
+                        </div>
+                    </div>
+                    <input type="checkbox" id="modal-apply-points" class="w-5 h-5 accent-emerald-500" onchange="updateModalTotal()">
                 </div>
 
                 <input type="hidden" id="modal-item-id">
                 <input type="hidden" id="modal-item-price">
                 <input type="hidden" id="modal-item-max-qty">
 
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Quantity</label>
-                    <input type="number" id="modal-purchase-qty" value="1" min="1" class="w-full glass rounded-xl px-4 py-3 text-sm" oninput="updateModalTotal()">
-                </div>
-
                 <div class="flex justify-between items-center p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                    <p class="text-sm font-bold text-emerald-400">Order Total</p>
+                    <div>
+                        <p class="text-[10px] font-bold text-emerald-400 uppercase">Final Total</p>
+                        <p class="text-xs text-white/30 line-through" id="modal-subtotal-display" style="display:none;">$0.00</p>
+                    </div>
                     <p class="text-2xl font-bold text-emerald-300" id="modal-item-price-display">$0.00</p>
                 </div>
 
@@ -347,27 +351,15 @@
                 </button>
             </div>
 
-            <!-- STEP 2: Delivery Info (Cash on Delivery) -->
+            <!-- STEP 2: Delivery Info -->
             <div id="checkout-step-2" class="space-y-4 hidden">
-                <div class="p-4 bg-amber-500/10 rounded-xl border border-amber-500/20 flex items-center gap-3">
-                    <i data-lucide="banknote" class="w-6 h-6 text-amber-400"></i>
-                    <div>
-                        <p class="text-sm font-bold text-amber-400">Cash on Delivery</p>
-                        <p class="text-[10px] text-white/50">Pay when your order arrives at your doorstep.</p>
-                    </div>
-                </div>
-
                 <div class="space-y-1">
-                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Full Name</label>
-                    <input type="text" id="delivery-name" placeholder="Your full name" required class="w-full glass rounded-xl px-4 py-3 text-sm">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Phone Number</label>
-                    <input type="tel" id="delivery-phone" placeholder="e.g. 0300-1234567" required class="w-full glass rounded-xl px-4 py-3 text-sm">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Recipient Name</label>
+                    <input type="text" id="delivery-name" placeholder="Who is receiving this?" required class="w-full glass rounded-xl px-4 py-3 text-sm">
                 </div>
                 <div class="space-y-1">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Delivery Address</label>
-                    <textarea id="delivery-address" rows="3" placeholder="Full street address, city, zip code" required class="w-full glass rounded-xl px-4 py-3 text-sm" style="resize: none;"></textarea>
+                    <textarea id="delivery-address" rows="3" placeholder="Full street address, city" required class="w-full glass rounded-xl px-4 py-3 text-sm" style="resize: none;"></textarea>
                 </div>
 
                 <div class="flex gap-3 mt-2">
@@ -387,12 +379,11 @@
                 </div>
                 <div>
                     <h4 class="text-2xl font-bold text-emerald-400">Order Confirmed!</h4>
-                    <p class="text-white/50 text-sm mt-2">Your rescue mission has been deployed. Pay <span class="text-amber-400 font-bold" id="confirmed-total">$0.00</span> on delivery.</p>
+                    <p class="text-white/50 text-sm mt-2">Your rescue mission has been deployed.</p>
                 </div>
                 <div class="glass p-4 rounded-xl text-left space-y-2 text-sm">
-                    <div class="flex justify-between"><span class="text-white/40">Item</span><span class="font-mono" id="confirmed-item">#---</span></div>
-                    <div class="flex justify-between"><span class="text-white/40">Qty</span><span id="confirmed-qty">1</span></div>
-                    <div class="flex justify-between"><span class="text-white/40">Deliver To</span><span id="confirmed-name">---</span></div>
+                    <div class="flex justify-between"><span class="text-white/40">Total Amount</span><span class="font-bold text-emerald-400" id="confirmed-total">$0.00</span></div>
+                    <div class="flex justify-between"><span class="text-white/40">Payment</span><span id="confirmed-method" class="uppercase">Cash</span></div>
                     <div class="flex justify-between border-t border-white/10 pt-2 mt-2"><span class="text-emerald-400 font-bold">Loyalty Points Earned</span><span class="text-emerald-400 font-bold" id="confirmed-points">+0</span></div>
                 </div>
                 <button onclick="closeCheckout()" class="w-full btn-primary py-4 rounded-xl font-bold flex justify-center items-center gap-2">
@@ -406,18 +397,14 @@
     <div id="toast-container" class="fixed bottom-8 right-8 z-[200] space-y-4"></div>
 
     <script>
-        // Init Lucide
         lucide.createIcons();
 
-        // Data Management - default to 2 if not set (Customer)
         const customerId = localStorage.getItem('user_id') || 2; 
         const baseUrl = 'http://localhost:5000';
 
-        // State Management
         let currentSection = 'overview';
         let userPoints = 0;
 
-        // Navigation
         function showSection(section) {
             document.querySelectorAll('.section-container').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
@@ -441,14 +428,11 @@
             document.getElementById('section-subtitle').innerText = titles[section].s;
         }
 
-        // Modals
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
 
-        // API Interactions
         async function refreshData() {
             try {
-                // Common profile info
                 const profRes = await fetch(`${baseUrl}/profile/${customerId}`);
                 const profData = await profRes.json();
                 if (profData && profData.length > 0) {
@@ -465,39 +449,27 @@
                 
             } catch (err) {
                 console.error("Refresh Error:", err);
-                showToast("System error: Unable to sync with network.", "error");
             }
         }
 
         async function loadOverview() {
             try {
-                // Calculate personal impact metrics from order history
-                // Note: using POST for /orderhistory as per strict instructions
-                const historyRes = await fetch(`${baseUrl}/orderhistory`, {
+                const historyRes = await fetch(`${baseUrl}/orderhistory/full`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ buyer_id: customerId })
                 });
                 const orders = await historyRes.json();
                 
-                let totalItems = 0;
-                orders.forEach(o => {
-                    if(o.order_type === 'purchase') {
-                        totalItems += o.quantity_ordered;
-                    }
-                });
-
-                // Assuming 2.5kg CO2 saved per item (as in server.js)
+                let totalItems = orders.reduce((sum, o) => sum + (o.quantity_ordered || 0), 0);
                 const totalCo2 = (totalItems * 2.5).toFixed(1);
 
                 document.getElementById('stat-personal-items').innerText = totalItems;
                 document.getElementById('stat-personal-co2').innerText = totalCo2;
 
-                // Load Featured items
-                const discRes = await fetch(`${baseUrl}/displaydiscounted`);
+                const discRes = await fetch(`${baseUrl}/displaydiscounted/full`);
                 const discountedItems = await discRes.json();
                 
-                // Get a few near-expiry items for featured (e.g., sort by expiry, slice top 3)
                 const featured = discountedItems
                     .sort((a, b) => new Date(a.expiry_date) - new Date(b.expiry_date))
                     .slice(0, 3);
@@ -511,12 +483,11 @@
 
         async function loadMarketplace() {
             try {
-                const res = await fetch(`${baseUrl}/displaydiscounted`);
+                const res = await fetch(`${baseUrl}/displaydiscounted/full`);
                 const items = await res.json();
                 renderItemGrid(items, 'marketplace-grid');
             } catch(e) {
                 console.error(e);
-                showToast("Failed to fetch marketplace data.", "error");
             }
         }
 
@@ -525,7 +496,6 @@
             if(!cat) return loadMarketplace();
             
             try {
-                // Using POST for /filterbycategory as required by the backend implementation
                 const res = await fetch(`${baseUrl}/filterbycategory`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -533,10 +503,7 @@
                 });
                 const items = await res.json();
                 renderItemGrid(items, 'marketplace-grid');
-                showToast(`Filtered by category: ${cat}`, "info");
-            } catch(e) {
-                console.error(e);
-            }
+            } catch(e) { console.error(e); }
         }
 
         async function applyPriceFilter() {
@@ -544,7 +511,6 @@
             const max = parseFloat(document.getElementById('filter-max-price').value) || 99999;
             
             try {
-                // Using POST for /filterbyprice as required by backend
                 const res = await fetch(`${baseUrl}/filterbyprice`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -552,10 +518,7 @@
                 });
                 const items = await res.json();
                 renderItemGrid(items, 'marketplace-grid');
-                showToast("Applied price filters.", "info");
-            } catch(e) {
-                console.error(e);
-            }
+            } catch(e) { console.error(e); }
         }
 
         function renderItemGrid(items, containerId) {
@@ -567,7 +530,8 @@
                             <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">Product #${i.product_id}</span>
                             <span class="text-xs text-amber-400 font-bold bg-amber-500/10 px-2 py-1 rounded-lg">-30%</span>
                         </div>
-                        <p class="text-[10px] text-white/40 italic flex items-center gap-1 mt-2">
+                        <h4 class="text-lg font-bold text-white truncate">${i.product_name || 'Sustainable Item'}</h4>
+                        <p class="text-[10px] text-white/40 italic flex items-center gap-1 mt-1">
                             <i data-lucide="clock" class="w-3 h-3"></i> Exp: ${new Date(i.expiry_date).toLocaleDateString()}
                         </p>
                     </div>
@@ -580,17 +544,16 @@
                         <p class="text-xs text-white/50 bg-white/5 px-2 py-1 rounded-lg border border-white/10">Qty: ${i.quantity}</p>
                     </div>
                     
-                    <button onclick="initPurchase(${i.item_id}, ${i.current_price}, ${i.quantity})" class="w-full mt-4 py-3 rounded-xl border border-emerald-500/30 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-forest-green font-bold transition-all flex items-center justify-center gap-2 text-sm">
+                    <button onclick="initPurchase(${i.item_id}, '${i.product_name}', ${i.current_price}, ${i.quantity})" class="w-full mt-4 py-3 rounded-xl border border-emerald-500/30 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-forest-green font-bold transition-all flex items-center justify-center gap-2 text-sm">
                         <i data-lucide="shopping-cart" class="w-4 h-4"></i> Reserve
                     </button>
                 </div>
-            `).join('') || `<div class="col-span-full py-12 text-center text-white/30 italic">No sustainable options currently match this criteria.</div>`;
+            `).join('') || `<div class="col-span-full py-12 text-center text-white/30 italic">No surplus options found.</div>`;
             lucide.createIcons();
         }
 
-        function initPurchase(itemId, price, maxQty) {
-            document.getElementById('modal-item-id-display').innerText = `#${itemId}`;
-            document.getElementById('modal-unit-price-display').innerText = `$${price.toFixed(2)}`;
+        function initPurchase(itemId, itemName, price, maxQty) {
+            document.getElementById('modal-item-name-display').innerText = itemName;
             document.getElementById('modal-item-id').value = itemId;
             document.getElementById('modal-item-price').value = price;
             document.getElementById('modal-item-max-qty').value = maxQty;
@@ -599,7 +562,9 @@
             qtyInput.value = 1;
             qtyInput.max = maxQty;
 
-            // Reset to step 1
+            document.getElementById('modal-apply-points').checked = false;
+            document.getElementById('modal-payment-method').value = 'cash';
+
             goToStep(1);
             openModal('purchaseModal');
             updateModalTotal();
@@ -607,94 +572,99 @@
         }
 
         function goToStep(step) {
-            // Hide all steps
             document.getElementById('checkout-step-1').classList.add('hidden');
             document.getElementById('checkout-step-2').classList.add('hidden');
             document.getElementById('checkout-step-3').classList.add('hidden');
 
-            // Reset step dots
             document.getElementById('step-dot-1').className = 'w-3 h-3 rounded-full bg-white/20 transition-all';
             document.getElementById('step-dot-2').className = 'w-3 h-3 rounded-full bg-white/20 transition-all';
             document.getElementById('step-dot-3').className = 'w-3 h-3 rounded-full bg-white/20 transition-all';
 
-            // Show target step and highlight dot
             document.getElementById(`checkout-step-${step}`).classList.remove('hidden');
             document.getElementById(`step-dot-${step}`).className = 'w-3 h-3 rounded-full bg-emerald-400 transition-all';
 
-            // Mark completed steps
             for (let i = 1; i < step; i++) {
                 document.getElementById(`step-dot-${i}`).className = 'w-3 h-3 rounded-full bg-emerald-400/50 transition-all';
             }
 
-            // Update title
             const titles = { 1: 'Secure Checkout', 2: 'Delivery Details', 3: 'Order Confirmed' };
             document.getElementById('checkout-title').innerText = titles[step];
-
             lucide.createIcons();
         }
 
         function updateModalTotal() {
             const price = parseFloat(document.getElementById('modal-item-price').value);
             const qty = parseInt(document.getElementById('modal-purchase-qty').value) || 1;
-            const total = price * qty;
+            const applyPoints = document.getElementById('modal-apply-points').checked;
+            
+            let total = price * qty;
+            const subtotalDisplay = document.getElementById('modal-subtotal-display');
+
+            if (applyPoints) {
+                subtotalDisplay.innerText = `$${total.toFixed(2)}`;
+                subtotalDisplay.style.display = 'block';
+                total = total * 0.9; // 10% discount
+            } else {
+                subtotalDisplay.style.display = 'none';
+            }
+
             document.getElementById('modal-item-price-display').innerText = `$${total.toFixed(2)}`;
         }
 
         async function confirmPurchase() {
-            // Validate delivery fields
             const deliveryName = document.getElementById('delivery-name').value.trim();
-            const deliveryPhone = document.getElementById('delivery-phone').value.trim();
             const deliveryAddress = document.getElementById('delivery-address').value.trim();
 
-            if (!deliveryName || !deliveryPhone || !deliveryAddress) {
-                return showToast("All delivery fields are required.", "warning");
+            if (!deliveryName || !deliveryAddress) {
+                return showToast("Name and Address are required.", "warning");
             }
 
             const itemId = document.getElementById('modal-item-id').value;
-            const price = parseFloat(document.getElementById('modal-item-price').value);
             const qty = parseInt(document.getElementById('modal-purchase-qty').value) || 1;
-            const totalAmount = price * qty;
+            const paymentMethod = document.getElementById('modal-payment-method').value;
+            const usePoints = document.getElementById('modal-apply-points').checked;
+            
+            // Re-calculate final total for safety
+            const price = parseFloat(document.getElementById('modal-item-price').value);
+            let finalTotal = price * qty;
+            const pointsUsed = usePoints ? 50 : 0; // Assuming 50 points used for discount
+            if(usePoints) finalTotal *= 0.9;
 
-            // Disable button to prevent double-click
             const btn = document.getElementById('btn-confirm-order');
             btn.disabled = true;
             btn.innerHTML = '<i data-lucide="loader" class="w-5 h-5 animate-spin"></i> Processing...';
             lucide.createIcons();
 
             try {
-                const res = await fetch(`${baseUrl}/placeorder`, {
+                const res = await fetch(`${baseUrl}/placeorder/full`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         buyer_id: customerId,
                         item_id: itemId,
-                        order_type: 'purchase',
                         quantity_ordered: qty,
-                        total_amount: totalAmount,
+                        total_amount: finalTotal,
                         delivery_name: deliveryName,
-                        delivery_phone: deliveryPhone,
-                        delivery_address: deliveryAddress
+                        delivery_address: deliveryAddress,
+                        payment_method: paymentMethod,
+                        points_used: pointsUsed
                     })
                 });
 
                 if (res.ok) {
-                    const orderData = await res.json();
-                    // Populate confirmation screen
-                    document.getElementById('confirmed-total').innerText = `$${totalAmount.toFixed(2)}`;
-                    document.getElementById('confirmed-item').innerText = `#${itemId}`;
-                    document.getElementById('confirmed-qty').innerText = qty;
-                    document.getElementById('confirmed-name').innerText = deliveryName;
-                    document.getElementById('confirmed-points').innerText = `+${orderData.pointsEarned || 0}`;
+                    const data = await res.json();
+                    document.getElementById('confirmed-total').innerText = `$${finalTotal.toFixed(2)}`;
+                    document.getElementById('confirmed-method').innerText = paymentMethod;
+                    document.getElementById('confirmed-points').innerText = `+${data.pointsEarned || 0}`;
 
                     goToStep(3);
-                    showToast("Order confirmed! Thank you for rescuing food.", "success");
+                    showToast("Order fully processed!", "success");
                 } else {
-                    const errData = await res.json();
-                    showToast(errData.error || "Transaction failed.", "error");
+                    const err = await res.json();
+                    showToast(err.error || "Checkout failed", "error");
                 }
             } catch(e) {
-                console.error(e);
-                showToast("Network failure during transaction.", "error");
+                showToast("Network Error", "error");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i data-lucide="shield-check" class="w-5 h-5"></i> Confirm Order';
@@ -704,18 +674,14 @@
 
         function closeCheckout() {
             closeModal('purchaseModal');
-            // Reset delivery form
             document.getElementById('delivery-name').value = '';
-            document.getElementById('delivery-phone').value = '';
             document.getElementById('delivery-address').value = '';
-            // Refresh data to show updated quantities
             refreshData();
         }
 
         async function loadReservations() {
             try {
-                // Using POST for /orderhistory
-                const res = await fetch(`${baseUrl}/orderhistory`, {
+                const res = await fetch(`${baseUrl}/orderhistory/full`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ buyer_id: customerId })
@@ -724,27 +690,28 @@
 
                 const tbody = document.getElementById('history-table-body');
                 tbody.innerHTML = history.map(h => `
-                    <tr class="hover:bg-white/5 transition-all">
+                    <tr class="hover:bg-white/5 transition-all text-sm">
                         <td class="py-5 px-4 font-mono text-emerald-400">#${h.order_id}</td>
                         <td class="py-5 px-4 text-white/70">${new Date(h.order_date).toLocaleDateString()}</td>
-                        <td class="py-5 px-4">ITEM-${h.item_id}</td>
+                        <td class="py-5 px-4 font-bold text-white">${h.product_name || 'N/A'}</td>
                         <td class="py-5 px-4">${h.quantity_ordered}</td>
                         <td class="py-5 px-4 font-bold text-amber-400">$${(h.total_amount || 0).toFixed(2)}</td>
+                        <td class="py-5 px-4">
+                            <span class="px-2 py-0.5 rounded-lg text-[10px] uppercase font-bold ${h.payment_status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}">
+                                ${h.payment_status || 'pending'}
+                            </span>
+                        </td>
                         <td class="py-5 px-4 text-right">
-                            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                Confirmed
+                            <span class="px-2 py-0.5 rounded-lg text-[10px] uppercase font-bold bg-blue-500/10 text-blue-400">
+                                ${h.delivery_status || 'pending'}
                             </span>
                         </td>
                     </tr>
-                `).join('') || `<tr><td colspan="6" class="py-12 text-center text-white/30 italic">No past reservations found. Start rescuing today!</td></tr>`;
+                `).join('') || `<tr><td colspan="7" class="py-12 text-center text-white/30 italic">No rescue history yet.</td></tr>`;
                 
-            } catch(e) {
-                console.error(e);
-                showToast("Failed to retrieve history log.", "error");
-            }
+            } catch(e) { console.error(e); }
         }
 
-        // Account Settings Actions
         async function updatePhone() {
             const phone = document.getElementById('settings-phone').value;
             const res = await fetch(`${baseUrl}/updatephone`, {
@@ -752,7 +719,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: customerId, phone_number: phone })
             });
-            if (res.ok) showToast("Phone communication linked successfully.", "success");
+            if (res.ok) showToast("Phone synced.", "success");
         }
         async function updateEmail() {
             const email = document.getElementById('settings-email').value;
@@ -761,23 +728,22 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: customerId, email: email })
             });
-            if (res.ok) showToast("Primary email updated.", "success");
+            if (res.ok) showToast("Email synced.", "success");
         }
         async function updatePassword() {
             const pass = document.getElementById('settings-password').value;
-            if(!pass) return showToast("Passcode cannot be empty.", "warning");
+            if(!pass) return showToast("Enter a passcode.", "warning");
             const res = await fetch(`${baseUrl}/updatepassword`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: customerId, password_hash: pass })
             });
             if (res.ok) {
-                showToast("Security credentials successfully rotated.", "success");
+                showToast("Password updated.", "success");
                 document.getElementById('settings-password').value = '';
             }
         }
 
-        // Utility
         function showToast(msg, type = "info") {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -799,10 +765,9 @@
 
         function logout() {
             localStorage.clear();
-            window.location.replace('./');
+            window.location.href = 'index.html';
         }
 
-        // Start
         refreshData();
     </script>
 </body>
