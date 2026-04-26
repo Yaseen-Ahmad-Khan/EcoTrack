@@ -295,8 +295,8 @@
                             <table class="w-full text-left text-sm">
                                 <thead>
                                     <tr class="text-white/40 border-b border-white/10 uppercase tracking-widest text-[10px] font-bold">
-                                        <th class="pb-3">Product ID</th>
-                                        <th class="pb-3">Last Seen</th>
+                                          <th class="pb-3">Product (ID)</th>
+                                          <th class="pb-3">Last Seen</th>
                                         <th class="pb-3 text-right">Status</th>
                                     </tr>
                                 </thead>
@@ -314,8 +314,8 @@
                             <table class="w-full text-left text-sm">
                                 <thead>
                                     <tr class="text-white/40 border-b border-white/10 uppercase tracking-widest text-[10px] font-bold">
-                                        <th class="pb-3">Product Name</th>
-                                        <th class="pb-3">Qty</th>
+                                          <th class="pb-3">Product (ID)</th>
+                                          <th class="pb-3">Qty</th>
                                         <th class="pb-3">Expiry Date</th>
                                         <th class="pb-3 text-right">Phase</th>
                                         <th class="pb-3 text-right">Actions</th>
@@ -452,10 +452,13 @@
             </div>
             <form id="add-stock-form" class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Product Catalog ID</label>
-                        <input type="number" id="modal-product-id" required class="w-full glass rounded-xl px-4 py-3 text-sm">
-                    </div>
+                      <div class="space-y-1">
+                          <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Product Catalog</label>
+                          <select id="modal-product-id" required class="w-full glass rounded-xl px-4 py-3 text-sm">
+                              <option value="">Select Product...</option>
+                              <!-- Dynamic Products -->
+                          </select>
+                      </div>
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Unit Quantity</label>
                         <input type="number" id="modal-quantity" required class="w-full glass rounded-xl px-4 py-3 text-sm">
@@ -552,6 +555,7 @@
                 if (currentSection === 'claims') loadClaims();
                 
                 loadNotifications();
+                loadCatalog();
             } catch (err) {
                 console.error("Refresh Error:", err);
                 showToast("System error: Unable to sync with backend server.", "error");
@@ -643,7 +647,7 @@
             const outTable = document.getElementById('out-of-stock-table');
             outTable.innerHTML = outOfStock.filter(i => i.vendor_id == vendorId).map(i => `
                 <tr class="hover:bg-white/5 transition-all">
-                    <td class="py-4 px-2 font-mono text-emerald-400">#${i.product_id}</td>
+                    <td class="py-4 px-2 font-mono text-emerald-400">${i.product_name || 'Unknown'} (#${i.product_id})</td>
                     <td class="py-4 px-2 text-white/60">${new Date().toLocaleDateString()}</td>
                     <td class="py-4 px-2 text-right"><span class="px-2 py-1 rounded-lg bg-red-500/10 text-red-500 text-[10px] font-bold uppercase">Depleted</span></td>
                 </tr>
@@ -654,7 +658,7 @@
                 const isNear = new Date(i.expiry_date) < new Date(Date.now() + 2*24*60*60*1000);
                 return `
                     <tr class="hover:bg-white/5 transition-all">
-                        <td class="py-4 px-2 font-medium text-white">${i.product_name || 'Unknown'}</td>
+                        <td class="py-4 px-2 font-medium text-white">${i.product_name || 'Unknown'} (#${i.product_id})</td>
                         <td class="py-4 px-2 text-white/60 font-mono">${i.quantity}</td>
                         <td class="py-4 px-2 ${isNear ? 'text-amber-500 font-bold' : 'text-white/60'}">${new Date(i.expiry_date).toLocaleDateString()}</td>
                         <td class="py-4 px-2 text-right">
@@ -683,13 +687,13 @@
             const items = await expRes.json();
 
             const select = document.getElementById('reprice-item-id');
-            select.innerHTML = '<option value="">Select ID...</option>' + items.map(i => `<option value="${i.item_id}">ID #${i.item_id} (${i.status})</option>`).join('');
+            select.innerHTML = '<option value="">Select ID...</option>' + items.map(i => `<option value="${i.item_id}">${i.product_name || 'Unknown'} (#${i.item_id})</option>`).join('');
 
             const list = document.getElementById('pricing-list');
             list.innerHTML = items.map(i => `
                 <div class="glass p-5 rounded-2xl space-y-4 group border border-transparent hover:border-emerald-500/30 transition-all">
                     <div class="flex justify-between items-start">
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 font-mono">Unit #${i.item_id}</span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 font-mono">${i.product_name || 'Unknown'} (#${i.item_id})</span>
                         <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${i.status === 'available' ? 'bg-blue-500/20 text-blue-400' : 'bg-amber-500/20 text-amber-500'}">${i.status}</span>
                     </div>
                     <div class="flex flex-col gap-1">
@@ -703,6 +707,18 @@
                 </div>
             `).join('') || '<div class="col-span-full text-center py-12 text-white/30 italic">No inventory available for re-valuation.</div>';
             lucide.createIcons();
+        }
+
+        async function loadCatalog() {
+            try {
+                const res = await fetch(`${baseUrl}/catalog/all`);
+                const products = await res.json();
+                const select = document.getElementById('modal-product-id');
+                select.innerHTML = '<option value="">Select Product...</option>' + 
+                    products.map(p => `<option value="${p.product_id}">${p.product_name} (#${p.product_id})</option>`).join('');
+            } catch (err) {
+                console.error("Catalog Error:", err);
+            }
         }
 
         async function loadClaims() {

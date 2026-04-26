@@ -420,7 +420,7 @@
         function updateSectionText(section) {
             const titles = {
                 'overview': { t: 'Explorer Dashboard', s: 'Discover sustainable surplus options near you.' },
-                'marketplace': { t: 'Surplus Marketplace', s: 'Browse all available discounted eco-friendly products.' },
+                'marketplace': { t: 'Surplus Marketplace', s: 'Browse all available and discounted eco-friendly products.' },
                 'reservations': { t: 'My Reservations', s: 'Track your personal environmental impact and past purchases.' },
                 'settings': { t: 'Account Settings', s: 'Manage your profile and communication preferences.' }
             };
@@ -523,12 +523,18 @@
 
         function renderItemGrid(items, containerId) {
             const container = document.getElementById(containerId);
-            container.innerHTML = items.map(i => `
+            container.innerHTML = items.map(i => {
+                const isDiscounted = i.status === 'discounted';
+                const discountBadge = isDiscounted ? `<span class="text-xs text-amber-400 font-bold bg-amber-500/10 px-2 py-1 rounded-lg">-30%</span>` : '';
+                const originalPrice = isDiscounted ? `<p class="text-[10px] text-white/40 line-through">$${(i.original_price || 0).toFixed(2)}</p>` : '';
+                const escapedName = (i.product_name || 'Sustainable Item').replace(/'/g, "\\'");
+
+                return `
                 <div class="glass p-5 rounded-3xl space-y-4 group border border-transparent hover:border-emerald-500/50 transition-all flex flex-col justify-between">
                     <div>
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">Product #${i.product_id}</span>
-                            <span class="text-xs text-amber-400 font-bold bg-amber-500/10 px-2 py-1 rounded-lg">-30%</span>
+                            ${discountBadge}
                         </div>
                         <h4 class="text-lg font-bold text-white truncate">${i.product_name || 'Sustainable Item'}</h4>
                         <p class="text-[10px] text-white/40 italic flex items-center gap-1 mt-1">
@@ -538,17 +544,17 @@
                     
                     <div class="flex items-end justify-between mt-4">
                         <div>
-                            <p class="text-[10px] text-white/40 line-through">$${(i.original_price || 0).toFixed(2)}</p>
+                            ${originalPrice}
                             <p class="text-2xl font-bold text-white">$${(i.current_price || 0).toFixed(2)}</p>
                         </div>
                         <p class="text-xs text-white/50 bg-white/5 px-2 py-1 rounded-lg border border-white/10">Qty: ${i.quantity}</p>
                     </div>
                     
-                    <button onclick="initPurchase(${i.item_id}, '${i.product_name}', ${i.current_price}, ${i.quantity})" class="w-full mt-4 py-3 rounded-xl border border-emerald-500/30 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-forest-green font-bold transition-all flex items-center justify-center gap-2 text-sm">
+                    <button onclick="initPurchase(${i.item_id}, '${escapedName}', ${i.current_price}, ${i.quantity})" class="w-full mt-4 py-3 rounded-xl border border-emerald-500/30 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-forest-green font-bold transition-all flex items-center justify-center gap-2 text-sm">
                         <i data-lucide="shopping-cart" class="w-4 h-4"></i> Reserve
                     </button>
                 </div>
-            `).join('') || `<div class="col-span-full py-12 text-center text-white/30 italic">No surplus options found.</div>`;
+            `}).join('') || `<div class="col-span-full py-12 text-center text-white/30 italic">No surplus options found.</div>`;
             lucide.createIcons();
         }
 
@@ -765,7 +771,7 @@
 
         function logout() {
             localStorage.clear();
-            window.location.href = 'index.html';
+            window.location.replace('./');
         }
 
         refreshData();

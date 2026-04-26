@@ -28,7 +28,7 @@ app.listen(5000, () => {
     console.log("Server Running on port 5000");
 });
 const config = {
-    server: 'PC',
+    server: 'DESKTOP-LTPKS4P\\SQLEXPRESS',
     database: 'ecotrack',
     driver: 'ODBC Driver 18 for SQL Server',
     options: {
@@ -42,6 +42,16 @@ app.get('/displayallusers', async (req, res) => {
     await sql.connect(config);
     const result = await sql.query('select * from users');
     res.json(result.recordset);
+});
+
+app.get('/catalog/all', async (req, res) => {
+    try {
+        await sql.connect(config);
+        const result = await sql.query("SELECT product_id, product_name FROM products");
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 //register user(postman)
@@ -219,11 +229,13 @@ app.post('/filterbycategory', async (req, res) => {
     const { category_name } = req.body;
 
     const result = await sql.query`
-        SELECT inventory.*
+        SELECT inventory.*, products.product_name
         FROM inventory
         JOIN products ON inventory.product_id = products.product_id
         JOIN categories ON products.category_id = categories.category_id
         WHERE categories.category_name = ${category_name}
+        AND inventory.status IN ('available', 'discounted')
+        AND inventory.quantity > 0
     `;
 
     res.json(result.recordset);
@@ -234,10 +246,13 @@ app.post('/filterbyprice', async (req, res) => {
     const { min_price, max_price } = req.body;
 
     const result = await sql.query`
-        SELECT * FROM inventory
-        WHERE current_price >= ${min_price}
-        AND current_price <= ${max_price}
-        AND status = 'discounted'
+        SELECT i.*, p.product_name 
+        FROM inventory i
+        JOIN products p ON i.product_id = p.product_id
+        WHERE i.current_price >= ${min_price}
+        AND i.current_price <= ${max_price}
+        AND i.status IN ('available', 'discounted')
+        AND i.quantity > 0
     `;
 
     res.json(result.recordset);
@@ -397,8 +412,10 @@ app.get('/outofstock', async (req, res) => {
     await sql.connect(config);
 
     const result = await sql.query(`
-        SELECT * FROM inventory
-        WHERE quantity = 0
+        SELECT i.*, p.product_name 
+        FROM inventory i
+        LEFT JOIN products p ON i.product_id = p.product_id
+        WHERE i.quantity = 0
     `);
 
     res.json(result.recordset);
@@ -539,7 +556,27 @@ const runAutoLogic = async () => {
             WHERE expiry_date < GETDATE()
         `;
 
-        console.log("Inventory maintenance logic (Donation & Purge) executed successfully.");
+        // 4. Auto Complete Deliveries (Mark as delivered if order is > 5 days old and still pending)
+        await sql.query`
+            UPDATE logistics 
+            SET delivery_status = 'delivered', actual_arrival = GETDATE()
+            FROM logistics l
+            JOIN orders o ON l.order_id = o.order_id
+            WHERE o.order_date <= DATEADD(day, -5, GETDATE()) 
+            AND l.delivery_status IN ('pending', 'in-transit')
+        `;
+
+        // 5. Auto Complete Payments (Mark as completed if order is > 5 days old and still pending)
+        await sql.query`
+            UPDATE payments 
+            SET payment_status = 'completed'
+            FROM payments p
+            JOIN orders o ON p.order_id = o.order_id
+            WHERE o.order_date <= DATEADD(day, -5, GETDATE()) 
+            AND p.payment_status = 'pending'
+        `;
+
+        console.log("Inventory maintenance and Order completion logic executed successfully.");
     } catch (err) {
         console.error("Maintenance logic error:", err);
         // We don't throw here to prevent crashing the server on automated tasks
@@ -685,7 +722,7 @@ app.get('/displaydiscounted/full', async (req, res) => {
             SELECT i.*, p.product_name 
             FROM inventory i
             JOIN products p ON i.product_id = p.product_id
-            WHERE i.status = 'discounted' AND i.quantity > 0
+            WHERE i.status IN ('available', 'discounted') AND i.quantity > 0
         `);
         res.json(result.recordset);
     } catch (err) {
